@@ -3,119 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>网站统计管理</title>
+    <title>流体统计中枢 V2</title>
     <style>
         :root {
-            --bg: #f7f5f0; --card: #ffffff; --text-m: #4a4a4a; --text-l: #9b9b9b;
-            --primary: #8da493; --border: #e8e6df; --danger: #d9827c;
+            --bg: #0a0a0a; --card: #141414; --text-m: #e0e0e0; --text-l: #888888;
+            --primary: #64ffda; --border: #2a2a2a; --danger: #ff4c4c;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text-m); overflow: hidden; height: 100vh; }
         
-        .header { background: var(--card); height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
+        .header { background: var(--card); height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; letter-spacing: 1px; color: #fff; }
         .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; font-weight: 500; }
         .header .btn-delete-top { position: absolute; right: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--danger); display: none; cursor: pointer; font-weight: 500; }
         
         .view-container { position: relative; height: calc(100vh - 54px - env(safe-area-inset-top)); overflow: hidden; }
-        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         .view.active { opacity: 1; pointer-events: auto; }
         
-        #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; padding: 0; }
-        #view-edit.show { transform: translateX(0); }
+        #view-edit { transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; padding: 0; }
+        #view-edit.show { transform: translateY(0); }
         .edit-scroll-box { padding: 20px 20px 120px 20px; }
         
         #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); }
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; }
         .nav-item { text-align: center; color: var(--text-l); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--primary); font-weight: 600; }
         .nav-icon { font-size: 22px; margin-bottom: 4px; display: block; filter: grayscale(1); opacity: 0.6; }
         .nav-item.active .nav-icon { filter: grayscale(0); opacity: 1; }
 
-        .edit-nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 40; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); }
+        .edit-nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 40; }
         .edit-nav-item { flex: 1; text-align: center; font-size: 14px; color: var(--text-m); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px 0; }
         .edit-nav-item .icon { font-size: 20px; }
 
-        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); }
-        .card-header { font-weight: 600; margin-bottom: 16px; font-size: 16px; color: var(--text-m); }
+        .card { background: var(--card); border-radius: 18px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
+        .card-header { font-weight: 600; margin-bottom: 16px; font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        
+        .indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block; box-shadow: 0 0 10px var(--primary); }
 
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stat-box { background: var(--bg); padding: 16px 12px; border-radius: 12px; text-align: center; }
-        .stat-label { font-size: 12px; color: var(--text-l); margin-bottom: 8px; }
-        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-m); }
+        .stat-box { background: rgba(255,255,255,0.03); padding: 16px 12px; border-radius: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-label { font-size: 12px; color: var(--text-l); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 24px; font-weight: 700; color: #fff; font-family: monospace; }
 
-        .site-card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-        .site-card:active { transform: scale(0.97); }
-        .site-domain { font-size: 16px; font-weight: 600; }
-        .site-alias { font-size: 12px; color: var(--primary); margin-top: 4px; }
+        .site-card { background: var(--card); border-radius: 18px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; }
+        .site-card:active { transform: scale(0.98); }
+        .site-domain { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+        .site-alias { font-size: 12px; color: var(--text-l); }
 
-        .fab { position: fixed; bottom: calc(105px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5); z-index: 15; cursor: pointer; display: none; }
+        .fab { position: fixed; bottom: calc(105px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: #000; font-size: 28px; box-shadow: 0 0 20px rgba(100, 255, 218, 0.4); z-index: 15; cursor: pointer; display: none; }
         .fab:active { transform: scale(0.9); }
 
         .form-group { margin-bottom: 18px; }
         .label { font-size: 13px; color: var(--text-m); margin-bottom: 10px; font-weight: 500; }
-        input[type="text"], input[type="password"], select.native-select { width: 100%; background: var(--bg); border: 1px solid var(--border); height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; color: var(--text-m); outline: none; -webkit-appearance: none; }
+        input[type="text"], input[type="password"], select.native-select { width: 100%; background: var(--bg); border: 1px solid var(--border); height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; color: #fff; outline: none; -webkit-appearance: none; }
         input:focus, select.native-select:focus { border-color: var(--primary); }
         
-        input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 40px; margin: 0; padding: 0;}
-        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--primary); margin-top: -10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-        input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border); border-radius: 2px; }
-        
-        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--card); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
+        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
         .toggle-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-m); }
         input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; accent-color: var(--primary); }
-
-        .color-row { display:flex; justify-content:space-between; align-items:center; background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:12px; margin-bottom:10px; }
-        .color-title { font-size:13px; color:var(--text-m); width:60px; }
-        .color-swatches { display:flex; gap:8px; }
-        .swatch { width:26px; height:26px; border-radius:50%; border:1px solid var(--border); cursor:pointer; }
-        .hex-input { width:70px !important; height:28px !important; padding:0 5px !important; font-family:monospace; text-align:center; font-size:12px !important; border-radius:6px !important; border:1px solid var(--border); background:var(--card) !important; margin:0;}
-
-        .sort-list { background: var(--bg); border-radius: 14px; border: 1px solid var(--border); padding: 8px; }
-        .sort-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
-        .sort-item:last-child { border-bottom: none; }
-        .sort-btns { display: flex; gap: 15px; color: var(--primary); font-size: 18px; font-weight: bold; }
         
-        .inline-name { background: transparent; border: none; border-bottom: 1px dashed var(--primary); width: 65px; text-align: center; color: var(--text-m); font-size: 14px; margin-left: 8px; padding: 2px 0; outline: none; border-radius: 0 !important; height: auto !important; }
-        .inline-name:focus { border-bottom-style: solid; }
+        .hex-input { width: 100px !important; height: 34px !important; padding: 0 10px !important; font-family: monospace; text-align: center; font-size: 14px !important; border-radius: 8px !important; border: 1px solid var(--border); background: var(--card) !important; margin: 0;}
 
-        .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; }
-        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(141, 164, 147, 0.3); }
-        .btn-danger { background: #ffffff; color: var(--danger); border: 1px solid var(--danger); }
-        .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--text-m); }
-        .btn:active { transform: scale(0.96); }
+        .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; color: #000; }
+        .btn-primary { background: var(--primary); }
+        .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
+        .btn:active { transform: scale(0.97); }
         .action-row { display: flex; gap: 12px; margin-top: 16px; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
-        .modal { background: var(--card); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); transform: scale(0.9); opacity: 0; transition: 0.2s; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal { background: var(--card); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; border: 1px solid var(--border); transform: scale(0.9); opacity: 0; transition: 0.2s; }
         .modal.show { transform: scale(1); opacity: 1; }
-        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; text-align: center; color: #fff; }
         .modal-body { font-size: 14px; color: var(--text-m); margin-bottom: 24px; text-align: center; line-height: 1.6; }
         
-        .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; text-align: left; color: var(--text-m); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
+        .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; text-align: left; color: var(--primary); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
         
-        .sticky-preview { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 20px 20px 10px 20px; border-bottom: 1px solid var(--border); }
-        .live-preview-box { background: var(--card); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px 10px; min-height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .chart-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
+        .chart-lbl { width: 80px; color: var(--text-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chart-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin: 0 10px; }
+        .chart-bar { height: 100%; background: var(--primary); border-radius: 3px; }
+        .chart-val { width: 30px; text-align: right; color: #fff; font-family: monospace; }
         
-        .toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 14px 28px; border-radius: 14px; font-size: 15px; display: none; z-index: 200; font-weight: 500; white-space: nowrap; }
+        .toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: #fff; color: #000; padding: 14px 28px; border-radius: 14px; font-size: 15px; display: none; z-index: 200; font-weight: 600; box-shadow: 0 10px 30px rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
     <div class="header" id="header-bar" style="display:none;">
-        <div class="btn-back" id="btn-back" onclick="handleBackBtn()">＜ 返回</div>
-        <span id="sys-title">网站管理</span>
-        <div class="btn-delete-top" id="btn-delete-top" onclick="confirmDeleteFromEdit()">删除</div>
+        <div class="btn-back" id="btn-back" onclick="handleBackBtn()">＜ 矩阵</div>
+        <span id="sys-title">流体统计中枢</span>
+        <div class="btn-delete-top" id="btn-delete-top" onclick="confirmDeleteFromEdit()">重置节点</div>
     </div>
 
     <div id="view-login" class="view">
-        <div class="card" style="width:100%; max-width:340px;">
-            <div class="card-header" style="text-align:center; font-size:20px;">系统登录</div>
-            <div class="form-group"><input type="text" id="login-pwd" placeholder="请输入系统密码" style="-webkit-text-security:disc;"></div>
-            <div class="form-group toggle-item" style="justify-content:center; margin-bottom:20px;">
-                <input type="checkbox" id="login-rem" checked> <label for="login-rem">记住密码，下次自动登录</label>
+        <div class="card" style="width:100%; max-width:340px; background:transparent; border:none;">
+            <div class="card-header" style="justify-content:center; font-size:24px; color:var(--primary); letter-spacing:2px; margin-bottom:40px;">系统握手</div>
+            <div class="form-group"><input type="text" id="login-pwd" placeholder="输入访问密钥" style="-webkit-text-security:disc; text-align:center; font-size:18px;"></div>
+            <div class="form-group toggle-item" style="justify-content:center; margin-bottom:30px;">
+                <input type="checkbox" id="login-rem" checked> <label for="login-rem">建立加密长链接</label>
             </div>
-            <button class="btn btn-primary" onclick="doLogin()">进入系统</button>
+            <button class="btn btn-primary" onclick="doLogin()">建立通讯</button>
         </div>
     </div>
 
@@ -128,15 +117,15 @@
 
         <div id="tab-stat" class="view" style="padding-bottom:120px;">
             <div class="form-group">
-                <select id="stat-selector" class="native-select" style="font-weight:600; background:var(--card);" onchange="selectStat(this.value)"></select>
+                <select id="stat-selector" class="native-select" style="font-weight:600; color:var(--primary); border-color:var(--primary);" onchange="selectStat(this.value)"></select>
             </div>
-            <div class="card" id="stat-board" style="padding:15px; background:var(--primary); color:white; border:none;">
-                <div style="font-size:16px; font-weight:600; margin-bottom:15px;" id="stat-view-title">全站汇总</div>
+            <div class="card" style="border-color:var(--primary);">
+                <div class="card-header"><span class="indicator"></span> <span id="stat-view-title">全域雷达探测</span></div>
                 <div class="stat-grid">
-                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
-                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
-                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">今日访问</div><div class="stat-val" style="color:white;" id="all-dpv">-</div></div>
-                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">今日访客</div><div class="stat-val" style="color:white;" id="all-duv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">流年总域 (PV)</div><div class="stat-val" id="all-pv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">独立灵魂 (UV)</div><div class="stat-val" id="all-uv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">今日潮汐 (PV)</div><div class="stat-val" id="all-dpv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">此刻心跳 (Online)</div><div class="stat-val" style="color:var(--primary);" id="all-duv">-</div></div>
                 </div>
             </div>
             <div id="stat-detail-list"></div>
@@ -144,144 +133,50 @@
 
         <div id="tab-sys" class="view" style="padding-bottom:120px;">
             <div class="card">
-                <div class="card-header">安全密码设置</div>
-                <div class="form-group"><input type="text" id="sys-pwd" placeholder="设置新密码 (留空则无密码)" oninput="handleSysPwdInput()"></div>
+                <div class="card-header"><span class="indicator" style="background:#fff; box-shadow:0 0 10px #fff;"></span> 安全协议配置</div>
+                <div class="form-group"><input type="text" id="sys-pwd" placeholder="设置底层访问密钥 (留空即无锁)" oninput="handleSysPwdInput()"></div>
                 <div class="form-group toggle-item" id="sec-rem-pwd" style="display:none; justify-content:space-between; margin-bottom:20px;">
-                    <label for="sys-rem-checkbox">本机记住密码</label><input type="checkbox" id="sys-rem-checkbox" checked>
+                    <label for="sys-rem-checkbox">持久化本机认证凭证</label><input type="checkbox" id="sys-rem-checkbox" checked>
                 </div>
-                <button class="btn btn-primary" onclick="saveSysConfig()">保存安全设置</button>
-                <button class="btn btn-outline" id="sec-logout" style="display:none; margin-top:12px; color:var(--danger); border-color:var(--danger);" onclick="logout()">退出登录</button>
+                <button class="btn btn-outline" onclick="saveSysConfig()">更新底层协议</button>
+                <button class="btn btn-outline" id="sec-logout" style="display:none; margin-top:12px; border-color:var(--danger); color:var(--danger);" onclick="logout()">熔断当前链接</button>
             </div>
             <div class="card">
-                <button class="btn btn-danger" onclick="confirmClearAll()">清空所有数据</button>
+                <button class="btn btn-danger" style="border:none;" onclick="confirmClearAll()">抹除系统全域数据 (核弹级)</button>
             </div>
         </div>
 
         <div id="view-edit" class="view">
-            <div class="sticky-preview">
-                <div class="live-preview-box" id="live-preview-container"></div>
-            </div>
-            
             <div class="edit-scroll-box">
                 <input type="hidden" id="e-site-id">
                 
                 <div class="card">
-                    <div class="card-header">布局与尺寸</div>
-                    <div class="form-group toggle-group" style="margin-bottom:16px;">
-                        <label class="toggle-item"><input type="radio" name="e-layout" value="row" onchange="updatePreview()"> 单行</label>
-                        <label class="toggle-item"><input type="radio" name="e-layout" value="grid" onchange="updatePreview()"> 双行</label>
-                    </div>
+                    <div class="card-header"><span class="indicator"></span> 灵动岛探针生成仪</div>
+                    <div style="font-size:12px; color:var(--text-l); margin-bottom:20px; line-height:1.5;">开启的模块将融合入悬浮微胶囊中。胶囊吸附于网页边缘，点击呈流体形态展开。</div>
                     
-                    <div class="form-group" style="margin-bottom:16px;">
-                        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-l); margin-bottom:5px;"><span>左侧位移</span><span>居中</span><span>右侧位移</span></div>
-                        <input type="range" id="e-offset" min="-50" max="50" step="1" value="0" oninput="updatePreview()">
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom:16px;">
-                        <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">全局等比缩放</div>
-                        <input type="range" id="e-scale" min="0.5" max="1" step="0.05" value="1" oninput="updatePreview()">
-                    </div>
-                    
-                    <div style="display:flex; gap:12px;">
-                        <div style="flex:1;">
-                            <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">大框边距</div>
-                            <input type="range" id="e-pad-box" min="0" max="2" step="0.1" value="0.6" oninput="updatePreview()">
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">小框左右距</div>
-                            <input type="range" id="e-pad-item-x" min="0.1" max="2" step="0.1" value="0.8" oninput="updatePreview()">
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">小框上下距</div>
-                            <input type="range" id="e-pad-item-y" min="0.1" max="2" step="0.1" value="0.6" oninput="updatePreview()">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">色彩方案</div>
-                    <div class="form-group toggle-item" style="margin-bottom:15px;">
-                        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="e-use-custom" onchange="updatePreview()"> 启用自定义提取色</label>
+                    <div class="toggle-group form-group">
+                        <label class="toggle-item"><input type="checkbox" id="e-t-pv"> 总访问流</label>
+                        <label class="toggle-item"><input type="checkbox" id="e-t-uv"> 独立访客</label>
+                        <label class="toggle-item"><input type="checkbox" id="e-t-online"> 实时心跳</label>
+                        <label class="toggle-item"><input type="checkbox" id="e-t-geo"> 方位探测</label>
+                        <label class="toggle-item"><input type="checkbox" id="e-t-dev"> 终端解析</label>
                     </div>
 
-                    <div id="tpl-select-container" class="form-group">
-                        <div class="label" style="font-size:12px; color:var(--text-l);">预设模板库</div>
-                        <select id="e-tpl-select" class="native-select" onchange="updatePreview()">
-                            <option value="1">燕麦暖色</option>
-                            <option value="2">纯白经典</option>
-                            <option value="3">灰绿冷调</option>
-                            <option value="4">藕荷粉黛</option>
-                            <option value="5">雾霾灰蓝</option>
-                            <option value="6">暗影极黑</option>
-                            <option value="7">黑武士</option>
-                            <option value="8">粉霜初绽</option>
-                            <option value="9">森系留白</option>
-                            <option value="10">隐形无框</option>
-                            <option value="11">霓虹幻影</option>
-                            <option value="12">极客黑客</option>
-                            <option value="13">咖啡醇香</option>
-                            <option value="14">深海幽蓝</option>
-                            <option value="15">落日余晖</option>
-                            <option value="16">森林秘境</option>
-                            <option value="17">樱落柔情</option>
-                            <option value="18">薰衣草紫</option>
-                            <option value="19">珊瑚橘暖</option>
-                            <option value="20">极致极简</option>
+                    <div class="form-group">
+                        <div class="label">胶囊吸附象限</div>
+                        <select id="e-pos" class="native-select">
+                            <option value="bottom-left">↙ 左下方沉底</option>
+                            <option value="bottom-right">↘ 右下方沉底</option>
                         </select>
                     </div>
 
-                    <div id="custom-color-panel" style="display:none; flex-direction:column; gap:8px;">
-                        <div class="color-row">
-                            <span class="color-title">大框</span>
-                            <div class="color-swatches">
-                                <span class="swatch" style="background:transparent; border:1px dashed #ccc;" onclick="setHex('c-box', 'transparent')"></span>
-                                <span class="swatch" style="background:#ffffff;" onclick="setHex('c-box', '#ffffff')"></span>
-                                <span class="swatch" style="background:#333333;" onclick="setHex('c-box', '#333333')"></span>
-                                <span class="swatch" style="background:#f9f7f2;" onclick="setHex('c-box', '#f9f7f2')"></span>
-                            </div>
-                            <input type="text" id="c-box" class="hex-input" value="transparent" oninput="updatePreview()">
-                        </div>
-                        <div class="color-row">
-                            <span class="color-title">小框</span>
-                            <div class="color-swatches">
-                                <span class="swatch" style="background:#ffffff;" onclick="setHex('c-item', '#ffffff')"></span>
-                                <span class="swatch" style="background:#333333;" onclick="setHex('c-item', '#333333')"></span>
-                                <span class="swatch" style="background:#f9f7f2;" onclick="setHex('c-item', '#f9f7f2')"></span>
-                                <span class="swatch" style="background:#eef0ed;" onclick="setHex('c-item', '#eef0ed')"></span>
-                            </div>
-                            <input type="text" id="c-item" class="hex-input" value="#f9f7f2" oninput="updatePreview()">
-                        </div>
-                        <div class="color-row">
-                            <span class="color-title">文案</span>
-                            <div class="color-swatches">
-                                <span class="swatch" style="background:#000000;" onclick="setHex('c-lbl', '#000000')"></span>
-                                <span class="swatch" style="background:#a5acaa;" onclick="setHex('c-lbl', '#a5acaa')"></span>
-                                <span class="swatch" style="background:#8da493;" onclick="setHex('c-lbl', '#8da493')"></span>
-                                <span class="swatch" style="background:#bca39f;" onclick="setHex('c-lbl', '#bca39f')"></span>
-                            </div>
-                            <input type="text" id="c-lbl" class="hex-input" value="#a5acaa" oninput="updatePreview()">
-                        </div>
-                        <div class="color-row">
-                            <span class="color-title">数值</span>
-                            <div class="color-swatches">
-                                <span class="swatch" style="background:#000000;" onclick="setHex('c-val', '#000000')"></span>
-                                <span class="swatch" style="background:#788583;" onclick="setHex('c-val', '#788583')"></span>
-                                <span class="swatch" style="background:#8da493;" onclick="setHex('c-val', '#8da493')"></span>
-                                <span class="swatch" style="background:#d9827c;" onclick="setHex('c-val', '#d9827c')"></span>
-                            </div>
-                            <input type="text" id="c-val" class="hex-input" value="#788583" oninput="updatePreview()">
+                    <div class="form-group">
+                        <div class="label">提取网站品牌主视觉 (HEX)</div>
+                        <div style="display:flex; gap:12px; align-items:center;">
+                            <input type="color" id="c-brand-picker" value="#64ffda" style="width:48px; height:48px; border:none; border-radius:12px; padding:0; background:transparent; cursor:pointer;" oninput="document.getElementById('e-brand').value=this.value;">
+                            <input type="text" id="e-brand" class="hex-input" style="flex:1;" value="#64ffda" oninput="document.getElementById('c-brand-picker').value=this.value;">
                         </div>
                     </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">文案、排序与显隐</div>
-                    <div style="font-size:12px; color:var(--text-l); margin-bottom:12px;">直接点击文字修改，右侧调整顺序</div>
-                    <div class="sort-list" id="sort-list"></div>
-                </div>
-                
-                <div style="display:none;">
-                    <input type="text" id="e-v-pv"><input type="text" id="e-v-uv"><input type="text" id="e-v-dpv"><input type="text" id="e-v-duv">
                 </div>
             </div>
         </div>
@@ -289,19 +184,19 @@
     </div>
 
     <div class="nav-bar" id="nav-bar" style="display:none;">
-        <div class="nav-item active" onclick="switchTab('site')"><span class="nav-icon">🌐</span>网站管理</div>
-        <div class="nav-item" onclick="switchTab('stat')"><span class="nav-icon">📊</span>统计数据</div>
-        <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>系统设置</div>
+        <div class="nav-item active" onclick="switchTab('site')"><span class="nav-icon">⎛</span>节点矩阵</div>
+        <div class="nav-item" onclick="switchTab('stat')"><span class="nav-icon">⚗️</span>全息透视</div>
+        <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>底层协议</div>
     </div>
     
     <div class="edit-nav-bar" id="edit-nav-bar" style="display:none;">
-        <div class="edit-nav-item" style="color:var(--text-m);" onclick="genLinkFromEdit()"><span class="icon">🔗</span>获取代码</div>
-        <div class="edit-nav-item" style="border-left:1px solid var(--border);" onclick="promptSave()" id="btn-save-edit"><span class="icon">💾</span>保存修改</div>
+        <div class="edit-nav-item" style="color:var(--primary);" onclick="genLinkFromEdit()"><span class="icon">🔌</span>装载代码</div>
+        <div class="edit-nav-item" style="border-left:1px solid var(--border);" onclick="promptSave()"><span class="icon">💾</span>固化协议</div>
     </div>
 
     <div class="modal-overlay" id="overlay">
         <div class="modal" id="modal">
-            <div class="modal-title" id="md-title">提示</div>
+            <div class="modal-title" id="md-title">指令拦截</div>
             <div class="modal-body" id="md-body"></div>
             <div class="action-row" id="md-actions"></div>
         </div>
@@ -313,36 +208,6 @@
         let allStatsData = null; 
         let isEditOpen = false;
         let sysHasPwd = false;
-        let currentOrder = [];
-        let currentOriginalConfigStr = "";
-        
-        const keyMap = { pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客' };
-        const tplDict = {
-            1: { box: 'transparent', bg: '#f9f7f2', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' },
-            2: { box: 'transparent', bg: '#ffffff', border: '#f4f1eb', val: '#5c5c5c', lbl: '#a0b5a6' },
-            3: { box: 'transparent', bg: '#eef0ed', border: '#eef0ed', val: '#8da493', lbl: '#788583' },
-            4: { box: 'transparent', bg: '#f5f0ef', border: '#ece5e3', val: '#bca39f', lbl: '#a5acaa' },
-            5: { box: 'transparent', bg: '#f2f5f6', border: '#e8edf0', val: '#7f93a1', lbl: '#a5acaa' },
-            6: { box: 'transparent', bg: '#fafafa', border: '#333333', val: '#333333', lbl: '#666666' },
-            7: { box: 'transparent', bg: '#333333', border: '#333333', val: '#f9f7f2', lbl: '#a5acaa' },
-            8: { box: 'transparent', bg: '#f9f9f9', border: '#d0b8b4', val: '#d0b8b4', lbl: '#a5acaa' },
-            9: { box: 'transparent', bg: '#ffffff', border: '#a0b5a6', val: '#a0b5a6', lbl: '#a5acaa' },
-            10: { box: 'transparent', bg: 'transparent', border: 'transparent', val: '#788583', lbl: '#a5acaa' },
-            11: { box: 'transparent', bg: '#121212', border: '#00ffcc', val: '#00ffcc', lbl: '#009999' },
-            12: { box: 'transparent', bg: '#000000', border: '#39ff14', val: '#39ff14', lbl: '#228b22' },
-            13: { box: 'transparent', bg: '#f4ece6', border: '#e2d3c8', val: '#5c4033', lbl: '#8b7355' },
-            14: { box: 'transparent', bg: '#0a192f', border: '#172a45', val: '#64ffda', lbl: '#8892b0' },
-            15: { box: 'transparent', bg: '#fff0e6', border: '#ffdcb3', val: '#ff7f50', lbl: '#ff9966' },
-            16: { box: 'transparent', bg: '#1b2a22', border: '#253e30', val: '#a8d5ba', lbl: '#7eb08c' },
-            17: { box: 'transparent', bg: '#fff0f5', border: '#ffb6c1', val: '#ff69b4', lbl: '#ffc0cb' },
-            18: { box: 'transparent', bg: '#f8f8ff', border: '#e6e6fa', val: '#9370db', lbl: '#b0c4de' },
-            19: { box: 'transparent', bg: '#fff5ee', border: '#ffdab9', val: '#ff4500', lbl: '#ffa07a' },
-            20: { box: 'transparent', bg: '#ffffff', border: '#000000', val: '#000000', lbl: '#000000' }
-        };
-
-        window.addEventListener('popstate', (e) => {
-            if (isEditOpen) closeEdit(true);
-        });
 
         function showToast(msg, ms=1500) {
             const t = document.getElementById('toast');
@@ -417,15 +282,15 @@
         async function doLogin() {
             const pwd = document.getElementById('login-pwd').value;
             const rem = document.getElementById('login-rem').checked;
-            if(!pwd) return showToast('请输入密码');
-            showToast('验证中...', 1000);
+            if(!pwd) return showToast('阻断：密钥空缺');
+            showToast('破解验证中...', 1000);
             const res = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd}) });
             const data = await res.json();
             if (data.ok) {
                 if (rem) localStorage.setItem('sys_pwd', pwd);
                 initApp();
             } else {
-                showToast('密码错误');
+                showToast('拦截：签名无效');
             }
         }
 
@@ -438,7 +303,7 @@
             const pwd = document.getElementById('sys-pwd').value.trim();
             document.getElementById('sys-pwd').value = pwd; 
             const rem = document.getElementById('sys-rem-checkbox').checked;
-            showToast('正在保存...');
+            showToast('烧录协议中...');
             await fetch('/stats?action=save_sys', { method: 'POST', body: JSON.stringify({pwd}) });
             if (pwd) {
                 sysHasPwd = true;
@@ -451,16 +316,16 @@
                 localStorage.removeItem('sys_pwd');
             }
             updateSysUI();
-            showToast('安全设置已保存');
+            showToast('底层认证更迭完毕');
         }
 
         function confirmClearAll() {
-            openModal('危险操作', `清空所有配置及密码？不可恢复。`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认</button>`);
+            openModal('终极销毁预警', `<div style="color:var(--danger); font-size:16px;">指令确认：执行全域 KV 擦除？</div><br>此操作将永久熔断所有部署的雷达探针，不可逆转。`, `<button class="btn btn-outline" onclick="closeModal()">终止执行</button><button class="btn btn-danger" onclick="doClearAll()">执行销毁</button>`);
         }
 
         async function doClearAll() {
             closeModal();
-            showToast('格式化中...', 2000);
+            showToast('KV 阵列格式化...', 3000);
             await fetch('/stats?action=clear_all', { method: 'POST' });
             localStorage.removeItem('sys_pwd');
             location.reload();
@@ -488,17 +353,29 @@
                 const card = document.createElement('div');
                 card.className = 'site-card';
                 card.onclick = function() { openEdit(site); };
-                card.innerHTML = `<div><div class="site-domain" style="margin-bottom:0;">${cName}</div></div><div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>`;
+                card.innerHTML = `<div><div class="site-domain">${cName}</div><div class="site-alias">UID: ${site}</div></div><div style="color:var(--primary); font-size:24px;">›</div>`;
                 list.appendChild(card);
             }
-            if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">还没有添加网站<br>点击右下角按钮添加</div>';
+            if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:80px; line-height:1.8;">雷达矩阵空载<br>轻触悬浮核心部署节点</div>';
+        }
+
+        function buildBarChart(dataObj) {
+            if(!dataObj || Object.keys(dataObj).length === 0) return '<div style="font-size:12px; color:var(--text-l);">静默期 (数据不足)</div>';
+            let max = 0;
+            for(let k in dataObj) if(dataObj[k] > max) max = dataObj[k];
+            let html = '';
+            for(let k in dataObj) {
+                let pct = (dataObj[k] / max) * 100;
+                html += `<div class="chart-row"><div class="chart-lbl">${k}</div><div class="chart-bar-wrap"><div class="chart-bar" style="width:${pct}%;"></div></div><div class="chart-val">${dataObj[k]}</div></div>`;
+            }
+            return html;
         }
 
         async function loadAllStats() {
-            const res = await fetch('/stats?action=get_all_stats');
+            const res = await fetch('/stats?action=get_dashboard');
             allStatsData = await res.json();
-            let optionsHtml = '<option value="all">👑 全站汇总</option>';
-            for (let site in allStatsData.sites) optionsHtml += `<option value="${site}">数据源: ${site}</option>`;
+            let optionsHtml = '<option value="all">👑 全域数据统合</option>';
+            for (let site in allStatsData.sites) optionsHtml += `<option value="${site}">探测节点: ${site}</option>`;
             document.getElementById('stat-selector').innerHTML = optionsHtml;
             document.getElementById('stat-selector').value = 'all';
             selectStat('all');
@@ -506,165 +383,48 @@
             let html = '';
             for (let site in allStatsData.sites) {
                 const s = allStatsData.sites[site];
-                html += `<div class="card" style="padding:15px; margin-bottom:12px;"><div style="font-weight:600; margin-bottom:10px;">${site}</div><div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-m); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px;"><div>总访问: <b>${s.pv}</b></div><div>总访客: <b>${s.uv}</b></div></div><div style="display:flex; justify-content:space-between; font-size:13px; color:var(--primary);"><div>今日访问: <b>${s.dpv}</b></div><div>今日访客: <b>${s.duv}</b></div></div></div>`;
+                html += `
+                <div class="card" style="padding:20px; margin-bottom:16px;">
+                    <div style="font-weight:600; margin-bottom:16px; color:var(--primary); display:flex; align-items:center; gap:8px;"><span class="indicator"></span>${site}</div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-m); padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border);">
+                        <div>总流: <b>${s.pv}</b> / 访客: <b>${s.uv}</b></div>
+                        <div>今日: <b style="color:var(--primary);">${s.dpv}</b></div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <div><div style="font-size:11px; color:var(--text-l); margin-bottom:8px;">终端画像</div>${buildBarChart(s.os)}</div>
+                        <div><div style="font-size:11px; color:var(--text-l); margin-bottom:8px;">溯源引流</div>${buildBarChart(s.ref)}</div>
+                    </div>
+                </div>`;
             }
             document.getElementById('stat-detail-list').innerHTML = html;
         }
 
         function selectStat(target) {
-            const s = target === 'all' ? allStatsData.total : (allStatsData.sites[target] || {pv:0,uv:0,dpv:0,duv:0});
-            document.getElementById('stat-view-title').innerText = target === 'all' ? '全站汇总' : target;
+            const s = target === 'all' ? allStatsData.total : (allStatsData.sites[target] || {pv:0,uv:0,dpv:0,duv:0,online:0});
+            document.getElementById('stat-view-title').innerText = target === 'all' ? '全域雷达探测' : `子节点 [${target}]`;
             document.getElementById('all-pv').innerText = s.pv;
             document.getElementById('all-uv').innerText = s.uv;
             document.getElementById('all-dpv').innerText = s.dpv;
-            document.getElementById('all-duv').innerText = s.duv;
+            document.getElementById('all-duv').innerText = target === 'all' ? '---' : s.online;
         }
 
         function showAddSiteModal() {
-            openModal('添加配置', `<input type="text" id="new-site-input" placeholder="输入任意名称标识" style="margin-top:10px; width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmAddSite()">确认</button>`);
+            openModal('分配探测节点', `<input type="text" id="new-site-input" placeholder="输入全网唯一标识 (如 a.com)" style="margin-top:10px; width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; background:var(--bg); color:#fff;">`, `<button class="btn btn-outline" onclick="closeModal()">取消调配</button><button class="btn btn-primary" onclick="confirmAddSite()">发射探针</button>`);
             setTimeout(() => document.getElementById('new-site-input')?.focus(), 300);
         }
 
         async function confirmAddSite() {
             const site = document.getElementById('new-site-input').value.trim();
-            if (!site || configs[site]) return showToast('名称无效或已存在');
+            if (!site || configs[site]) return showToast('标识无效或节点冲突');
             closeModal();
-            showToast('添加中...');
+            showToast('环境构建中...');
             configs[site] = { 
-                configName: site,
-                tpl: 1, scale: 1, offsetX: 0, layout: 'row', 
-                padBox: 0.6, padItemX: 0.8, padItemY: 0.6,
-                useCustom: false, colors: { box: 'transparent', item: '#f9f7f2', lbl: '#a5acaa', val: '#788583' },
-                order: ['pv','uv','dpv','duv'], pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} 
+                configName: site, position: 'bottom-left', brand: '#64ffda',
+                shows: {pv:true, uv:true, online:true, geo:true, dev:true} 
             };
             await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
             renderSites();
             openEdit(site);
-        }
-
-        function setHex(id, hex) {
-            document.getElementById(id).value = hex;
-            updatePreview();
-        }
-
-        function renderSortList() {
-            const list = document.getElementById('sort-list');
-            list.innerHTML = '';
-            currentOrder.forEach((k, idx) => {
-                const isChecked = document.getElementById(`e-t-${k}`).checked;
-                const vNode = document.getElementById(`e-v-${k}`);
-                const val = vNode ? vNode.value : keyMap[k];
-                list.innerHTML += `
-                <div class="sort-item" style="opacity:${isChecked?1:0.5};">
-                    <label style="display:flex; align-items:center; gap:4px;" for="ls-t-${k}">
-                        <input type="checkbox" id="ls-t-${k}" ${isChecked?'checked':''} onchange="syncShows('${k}')">
-                        <input type="text" class="inline-name" value="${val}" oninput="syncName('${k}', this.value)" placeholder="文案">
-                    </label>
-                    <div class="sort-btns">
-                        <span style="cursor:pointer; opacity:${idx===0?0.2:1};" onclick="moveOrder(${idx}, -1)">▲</span>
-                        <span style="cursor:pointer; opacity:${idx===3?0.2:1};" onclick="moveOrder(${idx}, 1)">▼</span>
-                    </div>
-                </div>`;
-            });
-            updatePreview();
-        }
-
-        function syncShows(k) {
-            document.getElementById(`e-t-${k}`).checked = document.getElementById(`ls-t-${k}`).checked;
-            renderSortList();
-        }
-        
-        function syncName(k, val) {
-            document.getElementById(`e-v-${k}`).value = val;
-            updatePreview();
-        }
-
-        function moveOrder(idx, dir) {
-            if (idx + dir < 0 || idx + dir > 3) return;
-            const temp = currentOrder[idx];
-            currentOrder[idx] = currentOrder[idx + dir];
-            currentOrder[idx + dir] = temp;
-            renderSortList();
-        }
-
-        function updatePreview() {
-            const useCustom = document.getElementById('e-use-custom').checked;
-            document.getElementById('custom-color-panel').style.display = useCustom ? 'flex' : 'none';
-            document.getElementById('tpl-select-container').style.display = useCustom ? 'none' : 'block';
-            
-            let t;
-            if (useCustom) {
-                t = { 
-                    box: document.getElementById('c-box').value, 
-                    bg: document.getElementById('c-item').value, 
-                    border: 'transparent', 
-                    lbl: document.getElementById('c-lbl').value, 
-                    val: document.getElementById('c-val').value 
-                };
-            } else {
-                const tplId = document.getElementById('e-tpl-select').value;
-                t = tplDict[tplId] || tplDict[1];
-            }
-
-            const offsetX = document.getElementById('e-offset').value;
-            const scale = parseFloat(document.getElementById('e-scale').value);
-            const baseSize = 14 * scale;
-            
-            const pb = document.getElementById('e-pad-box').value;
-            const px = document.getElementById('e-pad-item-x').value;
-            const py = document.getElementById('e-pad-item-y').value;
-            
-            const layoutNode = document.querySelector('input[name="e-layout"]:checked');
-            const isGrid = layoutNode && layoutNode.value === 'grid';
-            
-            const names = { pv: document.getElementById('e-v-pv').value, uv: document.getElementById('e-v-uv').value, dpv: document.getElementById('e-v-dpv').value, duv: document.getElementById('e-v-duv').value };
-            
-            let items = [];
-            currentOrder.forEach(k => {
-                if(document.getElementById(`e-t-${k}`).checked) {
-                    items.push(`<div style="flex: 0 0 ${isGrid?'calc(50% - 4px)':'auto'}; min-width:50px; background:${t.bg}; padding:${py}em ${px}em; border-radius:${py}em; border:1px solid ${t.border}; box-sizing:border-box; text-align:center;"><div style="font-size:0.75em; color:${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${names[k]}</div><div style="font-size:1.15em; color:${t.val}; font-weight:600;">888</div></div>`);
-                }
-            });
-
-            const paddingBox = t.box && t.box !== 'transparent' ? `padding:${pb}em; border-radius:${pb*1.2}em;` : '';
-            document.getElementById('live-preview-container').innerHTML = `<div style="display:flex; justify-content:center; width:100%;"><div style="display:flex; flex-wrap:${isGrid?'wrap':'nowrap'}; gap:8px; justify-content:center; background:${t.box}; ${paddingBox} transform:translateX(${offsetX}%); font-family:-apple-system,sans-serif; font-size:${baseSize}px; line-height:1; width:max-content; max-width:100%; box-sizing:border-box;">${items.join('')}</div></div>`;
-            checkChanges();
-        }
-
-        function checkChanges() {
-            const site = document.getElementById('e-site-id').value;
-            if (!configs[site]) return;
-
-            const layoutNode = document.querySelector('input[name="e-layout"]:checked');
-            const currObj = {
-                tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
-                scale: parseFloat(document.getElementById('e-scale').value) || 1,
-                offsetX: parseInt(document.getElementById('e-offset').value) || 0,
-                padBox: parseFloat(document.getElementById('e-pad-box').value) || 0.6,
-                padItemX: parseFloat(document.getElementById('e-pad-item-x').value) || 0.8,
-                padItemY: parseFloat(document.getElementById('e-pad-item-y').value) || 0.6,
-                layout: layoutNode ? layoutNode.value : 'row',
-                useCustom: document.getElementById('e-use-custom').checked,
-                colors: { box: document.getElementById('c-box').value, item: document.getElementById('c-item').value, lbl: document.getElementById('c-lbl').value, val: document.getElementById('c-val').value },
-                order: currentOrder,
-                pv: document.getElementById('e-v-pv').value,
-                uv: document.getElementById('e-v-uv').value,
-                dpv: document.getElementById('e-v-dpv').value,
-                duv: document.getElementById('e-v-duv').value,
-                shows: {
-                    pv: document.getElementById('e-t-pv').checked,
-                    uv: document.getElementById('e-t-uv').checked,
-                    dpv: document.getElementById('e-t-dpv').checked,
-                    duv: document.getElementById('e-t-duv').checked
-                }
-            };
-            
-            const btn = document.getElementById('btn-save-edit');
-            if (JSON.stringify(currObj) !== currentOriginalConfigStr) {
-                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.style.color = 'var(--primary)';
-            } else {
-                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.style.color = 'var(--text-m)';
-            }
         }
 
         function openEdit(site) {
@@ -672,65 +432,16 @@
                 const c = configs[site] || {};
                 document.getElementById('e-site-id').value = site;
                 
-                currentOrder = Array.isArray(c.order) ? [...c.order] : ['pv','uv','dpv','duv'];
-                const shows = c.shows || {pv:true, uv:true, dpv:true, duv:true};
-                
-                if(!document.getElementById('e-t-pv')) {
-                    const hiddenDiv = document.createElement('div');
-                    hiddenDiv.style.display = 'none';
-                    hiddenDiv.innerHTML = `<input type="checkbox" id="e-t-pv"><input type="checkbox" id="e-t-uv"><input type="checkbox" id="e-t-dpv"><input type="checkbox" id="e-t-duv"><input type="text" id="e-v-pv"><input type="text" id="e-v-uv"><input type="text" id="e-v-dpv"><input type="text" id="e-v-duv">`;
-                    document.body.appendChild(hiddenDiv);
-                }
-
+                const shows = c.shows || {pv:true, uv:true, online:true, geo:true, dev:true};
                 document.getElementById('e-t-pv').checked = !!shows.pv;
                 document.getElementById('e-t-uv').checked = !!shows.uv;
-                document.getElementById('e-t-dpv').checked = !!shows.dpv;
-                document.getElementById('e-t-duv').checked = !!shows.duv;
+                document.getElementById('e-t-online').checked = !!shows.online;
+                document.getElementById('e-t-geo').checked = !!shows.geo;
+                document.getElementById('e-t-dev').checked = !!shows.dev;
                 
-                document.getElementById('e-offset').value = c.offsetX || 0;
-                document.getElementById('e-scale').value = c.scale || 1;
-                document.getElementById('e-pad-box').value = c.padBox !== undefined ? c.padBox : 0.6;
-                document.getElementById('e-pad-item-x').value = c.padItemX !== undefined ? c.padItemX : 0.8;
-                document.getElementById('e-pad-item-y').value = c.padItemY !== undefined ? c.padItemY : 0.6;
-                document.getElementById('e-tpl-select').value = c.tpl || 1;
-                
-                document.getElementById('e-use-custom').checked = !!c.useCustom;
-                const colors = c.colors || { box: 'transparent', item: '#f9f7f2', lbl: '#a5acaa', val: '#788583' };
-                document.getElementById('c-box').value = colors.box !== 'transparent' ? colors.box : 'transparent';
-                document.getElementById('c-item').value = colors.item;
-                document.getElementById('c-lbl').value = colors.lbl;
-                document.getElementById('c-val').value = colors.val;
-
-                const layoutRadios = document.getElementsByName('e-layout');
-                for(let r of layoutRadios) { if(r.value === (c.layout || 'row')) r.checked = true; }
-
-                document.getElementById('e-v-pv').value = c.pv || '总访问';
-                document.getElementById('e-v-uv').value = c.uv || '总访客';
-                document.getElementById('e-v-dpv').value = c.dpv || '今日访问';
-                document.getElementById('e-v-duv').value = c.duv || '今日访客';
-
-                renderSortList();
-                
-                const currentLayoutNode = document.querySelector('input[name="e-layout"]:checked');
-                const currObj = {
-                    tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
-                    scale: parseFloat(document.getElementById('e-scale').value) || 1,
-                    offsetX: parseInt(document.getElementById('e-offset').value) || 0,
-                    padBox: parseFloat(document.getElementById('e-pad-box').value) || 0.6,
-                    padItemX: parseFloat(document.getElementById('e-pad-item-x').value) || 0.8,
-                    padItemY: parseFloat(document.getElementById('e-pad-item-y').value) || 0.6,
-                    layout: currentLayoutNode ? currentLayoutNode.value : 'row',
-                    useCustom: !!c.useCustom,
-                    colors: colors,
-                    order: currentOrder,
-                    pv: document.getElementById('e-v-pv').value,
-                    uv: document.getElementById('e-v-uv').value,
-                    dpv: document.getElementById('e-v-dpv').value,
-                    duv: document.getElementById('e-v-duv').value,
-                    shows: { pv: !!shows.pv, uv: !!shows.uv, dpv: !!shows.dpv, duv: !!shows.duv }
-                };
-                currentOriginalConfigStr = JSON.stringify(currObj);
-                checkChanges();
+                document.getElementById('e-pos').value = c.position || 'bottom-left';
+                document.getElementById('e-brand').value = c.brand || '#64ffda';
+                document.getElementById('c-brand-picker').value = c.brand || '#64ffda';
 
                 document.getElementById('sys-title').innerText = c.configName || site;
                 document.getElementById('btn-back').style.display = 'flex';
@@ -749,51 +460,33 @@
             const site = document.getElementById('e-site-id').value;
             const c = configs[site] || {};
             const cName = c.configName || site;
-            openModal('保存配置', `<div class="label" style="text-align:left;">配置别名 (修改名称将另存为新配置，原配置保留)：</div><input type="text" id="save-config-name" value="${cName}" style="width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; margin-bottom:10px;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="executeSave()">确认</button>`);
+            openModal('固化协议', `<div class="label" style="text-align:left; color:#fff;">分配节点代号 (覆盖修改)：</div><input type="text" id="save-config-name" value="${cName}" style="width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; margin-bottom:10px; background:var(--bg); color:#fff;">`, `<button class="btn btn-outline" onclick="closeModal()">终止</button><button class="btn btn-primary" onclick="executeSave()">确认烧录</button>`);
         }
 
         async function executeSave() {
             const configName = document.getElementById('save-config-name').value.trim();
-            if (!configName) return showToast('名称不能为空');
+            if (!configName) return showToast('代号残缺');
             closeModal();
             const site = document.getElementById('e-site-id').value;
-            const targetSite = configName; 
             
-            const layoutNode = document.querySelector('input[name="e-layout"]:checked');
-            configs[targetSite] = {
+            configs[site] = {
                 configName: configName,
-                tpl: parseInt(document.getElementById('e-tpl-select').value),
-                scale: parseFloat(document.getElementById('e-scale').value),
-                offsetX: parseInt(document.getElementById('e-offset').value),
-                padBox: parseFloat(document.getElementById('e-pad-box').value),
-                padItemX: parseFloat(document.getElementById('e-pad-item-x').value),
-                padItemY: parseFloat(document.getElementById('e-pad-item-y').value),
-                layout: layoutNode ? layoutNode.value : 'row',
-                useCustom: document.getElementById('e-use-custom').checked,
-                colors: { box: document.getElementById('c-box').value, item: document.getElementById('c-item').value, lbl: document.getElementById('c-lbl').value, val: document.getElementById('c-val').value },
-                order: [...currentOrder],
-                pv: document.getElementById('e-v-pv').value,
-                uv: document.getElementById('e-v-uv').value,
-                dpv: document.getElementById('e-v-dpv').value,
-                duv: document.getElementById('e-v-duv').value,
+                position: document.getElementById('e-pos').value,
+                brand: document.getElementById('e-brand').value,
                 shows: {
                     pv: document.getElementById('e-t-pv').checked,
                     uv: document.getElementById('e-t-uv').checked,
-                    dpv: document.getElementById('e-t-dpv').checked,
-                    duv: document.getElementById('e-t-duv').checked
+                    online: document.getElementById('e-t-online').checked,
+                    geo: document.getElementById('e-t-geo').checked,
+                    dev: document.getElementById('e-t-dev').checked
                 }
             };
             
-            showToast('保存中...');
-            await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: targetSite, ...configs[targetSite]}) });
-            
-            document.getElementById('e-site-id').value = targetSite;
-            document.getElementById('sys-title').innerText = targetSite;
-            
-            currentOriginalConfigStr = JSON.stringify({ tpl: configs[targetSite].tpl, scale: configs[targetSite].scale, offsetX: configs[targetSite].offsetX, padBox: configs[targetSite].padBox, padItemX: configs[targetSite].padItemX, padItemY: configs[targetSite].padItemY, layout: configs[targetSite].layout, useCustom: configs[targetSite].useCustom, colors: configs[targetSite].colors, order: configs[targetSite].order, pv: configs[targetSite].pv, uv: configs[targetSite].uv, dpv: configs[targetSite].dpv, duv: configs[targetSite].duv, shows: configs[targetSite].shows });
-            checkChanges();
+            showToast('云端协议同步中...');
+            await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
+            document.getElementById('sys-title').innerText = configName;
             renderSites();
-            showToast('保存成功');
+            showToast('协议固化成功');
         }
 
         function handleBackBtn() { closeEdit(); }
@@ -805,37 +498,37 @@
             document.getElementById('fab-add').style.display = 'flex';
             document.getElementById('nav-bar').style.display = 'flex';
             document.getElementById('edit-nav-bar').style.display = 'none';
-            document.getElementById('sys-title').innerText = '网站管理';
+            document.getElementById('sys-title').innerText = '流体统计中枢';
             isEditOpen = false;
         }
 
         function confirmDeleteFromEdit() {
             const site = document.getElementById('e-site-id').value;
-            openModal('确认删除', `删除 <b>${site}</b> ？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;cursor:pointer;"><input type="checkbox" id="del-erase-data" checked> 同时清除历史统计数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">删除</button>`);
+            openModal('切断节点', `确认永久脱机 <b>${site}</b> ？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;cursor:pointer;"><input type="checkbox" id="del-erase-data" checked> 顺扫全量深层历史数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">撤回指令</button><button class="btn btn-danger" onclick="doDelete('${site}')">切断</button>`);
         }
 
         async function doDelete(site) {
             const erase = document.getElementById('del-erase-data').checked;
             closeModal();
-            showToast('删除中...');
+            showToast('执行脱机序列...');
             delete configs[site];
             await fetch('/stats?action=delete_site', { method: 'POST', body: JSON.stringify({site, erase}) });
             renderSites();
             closeEdit();
-            showToast('已删除');
+            showToast('节点已从网络中抹去');
         }
 
         function genLinkFromEdit() {
             const site = document.getElementById('e-site-id').value;
-            const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
-            openModal('专属代码', `<div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制</button>`);
+            const code = `<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
+            openModal('探针挂载序列', `<div style="font-size:12px; color:var(--text-l); margin-bottom:8px;">V2 极简灵动岛探针无需额外声明 DOM</div><div class="code-preview" style="color:var(--primary);">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">收起</button><button class="btn btn-primary" onclick="copyCode('${site}')">拷贝流体代码</button>`);
         }
 
         function copyCode(site) {
-            const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
+            const code = `<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
             navigator.clipboard.writeText(code);
             closeModal();
-            showToast('已复制');
+            showToast('代码已缓存至神经链路');
         }
 
         bootSys();
