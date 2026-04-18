@@ -13,23 +13,19 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text-m); overflow: hidden; height: 100vh; }
         
-        /* 顶部导航 */
         .header { background: var(--card); height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
         .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; font-weight: 500; }
         
-        /* 滚动容器架构修复 */
         .view-container { position: relative; height: calc(100vh - 54px - env(safe-area-inset-top)); overflow: hidden; }
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .view.active { opacity: 1; pointer-events: auto; }
         
-        /* 编辑页专属滚动修复（大幅增加底部留白防遮挡） */
         #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; }
         #view-edit.show { transform: translateX(0); }
-        .edit-scroll-box { padding-bottom: 180px; } /* 确保划到底部能看到复制和删除按钮 */
+        .edit-scroll-box { padding-bottom: 180px; }
         
         #view-login { z-index: 50; background: var(--bg); display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
-        /* 底部切换栏 */
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); }
         .nav-item { text-align: center; color: var(--text-l); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--primary); font-weight: 600; }
@@ -163,20 +159,20 @@
                         <select id="e-size" class="native-select" style="flex:1;">
                             <option value="1">小号尺寸</option>
                             <option value="2">中号尺寸</option>
-                            <option value="3">大号尺寸 (默认)</option>
+                            <option value="3">大号尺寸</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <div class="label">选择展现模板</div>
+                    <div class="label">选择展现效果</div>
                     <select id="e-tpl-select" class="native-select">
-                        <option value="1">模板 1</option>
-                        <option value="3">模板 3</option>
-                        <option value="4">模板 4</option>
-                        <option value="5">模板 5</option>
-                        <option value="6">模板 6</option>
-                        <option value="10">模板 10</option>
+                        <option value="1">燕麦暖色</option>
+                        <option value="3">灰绿冷调</option>
+                        <option value="4">藕荷粉黛</option>
+                        <option value="5">雾霾灰蓝</option>
+                        <option value="6">极夜深黑</option>
+                        <option value="10">隐形无框</option>
                     </select>
                 </div>
 
@@ -221,7 +217,7 @@
         let configs = {};
         let isEditOpen = false;
         let isModalOpen = false;
-        let sysHasPwd = false; // 全局密码状态
+        let sysHasPwd = false;
 
         const tabTitles = { site: '网站管理', stat: '统计概览', sys: '系统设置' };
 
@@ -273,7 +269,6 @@
             if(tab === 'stat') loadAllStats();
         }
 
-        // --- 鉴权与设置 UI 动态处理 ---
         function updateSysUI() {
             if (sysHasPwd) {
                 document.getElementById('sec-rem-pwd').style.display = 'flex';
@@ -345,10 +340,9 @@
             showToast('安全设置已保存');
         }
 
-        // --- 清空所有数据逻辑 ---
         function confirmClearAll() {
             openModal('警告：清空所有数据', 
-            `确定要清空系统内所有的网站配置和访问密码吗？<br><br>清空后你的所有网站探针将失效，且<b>无法恢复</b>！`, 
+            `确定要清空系统内所有的网站配置和访问密码吗？<br><br>清空后你的所有网站将失去统计功能，且<b>无法恢复</b>！`, 
             `<button class="btn btn-outline" onclick="closeModal()">取消</button>
              <button class="btn btn-danger" onclick="doClearAll()">确认清空</button>`);
         }
@@ -362,7 +356,6 @@
             setTimeout(() => { location.reload(); }, 1000);
         }
 
-        // --- 核心业务初始化 ---
         async function initApp() {
             document.getElementById('view-login').style.display = 'none';
             document.getElementById('header-bar').style.display = 'flex';
@@ -443,7 +436,7 @@
             closeModal();
             showToast('添加中...');
             
-            configs[site] = { tpl: 1, size: 3, align: 'center', pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} };
+            configs[site] = { tpl: 1, size: 1, align: 'center', pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} };
             await fetch('/stats?action=save_config', {
                 method: 'POST', body: JSON.stringify({site: site, ...configs[site]})
             });
@@ -462,7 +455,7 @@
             document.getElementById('e-t-duv').checked = c.shows.duv;
             
             document.getElementById('e-align').value = c.align || 'center';
-            document.getElementById('e-size').value = c.size || 3;
+            document.getElementById('e-size').value = c.size || 1;
             document.getElementById('e-tpl-select').value = c.tpl || 1;
 
             document.getElementById('e-v-pv').value = c.pv;
