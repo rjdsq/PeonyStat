@@ -21,7 +21,7 @@
         
         #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; }
         #view-edit.show { transform: translateX(0); }
-        .edit-scroll-box { padding-bottom: 180px; }
+        .edit-scroll-box { padding-bottom: 120px; }
         
         #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
@@ -30,6 +30,11 @@
         .nav-item.active { color: var(--primary); font-weight: 600; }
         .nav-icon { font-size: 22px; margin-bottom: 4px; display: block; filter: grayscale(1); opacity: 0.6; }
         .nav-item.active .nav-icon { filter: grayscale(0); opacity: 1; }
+
+        .edit-nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 40; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); }
+        .edit-nav-item { flex: 1; text-align: center; font-size: 12px; color: var(--text-m); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 500; }
+        .edit-nav-item.danger { color: var(--danger); }
+        .edit-nav-item .icon { font-size: 20px; }
 
         .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); }
         .card-header { font-weight: 600; margin-bottom: 16px; font-size: 16px; color: var(--text-m); }
@@ -42,6 +47,7 @@
         .site-card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .site-card:active { transform: scale(0.97); }
         .site-domain { font-size: 16px; font-weight: 600; }
+        .site-alias { font-size: 12px; color: var(--primary); margin-top: 4px; }
 
         .fab { position: fixed; bottom: calc(105px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5); z-index: 15; cursor: pointer; display: none; }
         .fab:active { transform: scale(0.9); }
@@ -59,15 +65,19 @@
         .toggle-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-m); }
         input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; accent-color: var(--primary); }
 
-        .color-picker-wrap { display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--border); padding:10px 14px; border-radius:12px; font-size:14px; }
-        .color-picker-wrap input[type="color"] { border:none; width:30px; height:30px; border-radius:50%; padding:0; cursor:pointer; background:transparent; }
+        .color-picker-wrap { display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--border); padding:8px 12px; border-radius:12px; font-size:13px; }
+        .color-picker-wrap input[type="color"] { border:none; width:34px; height:34px; border-radius:50%; padding:0; cursor:pointer; background:transparent; }
         .color-picker-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
-        .color-picker-wrap input[type="color"]::-webkit-color-swatch { border:none; border-radius:50%; }
+        .color-picker-wrap input[type="color"]::-webkit-color-swatch { border:none; border-radius:50%; box-shadow:0 0 0 1px var(--border); }
+        .hex-input { width:70px !important; height:34px !important; padding:0 5px !important; font-family:monospace; text-align:center; font-size:13px !important; border-radius:8px !important; }
 
         .sort-list { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 8px; }
         .sort-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--bg); font-size: 14px; }
         .sort-item:last-child { border-bottom: none; }
         .sort-btns { display: flex; gap: 15px; color: var(--primary); font-size: 18px; font-weight: bold; }
+        
+        .inline-name { background: transparent; border: none; border-bottom: 1px dashed var(--primary); width: 80px; text-align: left; color: var(--text-m); font-size: 14px; margin-left: 10px; padding: 2px 0; outline: none; }
+        .inline-name:focus { border-bottom-style: solid; }
 
         .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(141, 164, 147, 0.3); }
@@ -84,7 +94,7 @@
         
         .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; text-align: left; color: var(--text-m); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
         
-        .live-preview-box { background: var(--card); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px 10px; margin-bottom: 20px; min-height: 90px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .live-preview-box { background: var(--card); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px 10px; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         
         .toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 14px 28px; border-radius: 14px; font-size: 15px; display: none; z-index: 200; font-weight: 500; white-space: nowrap; }
     </style>
@@ -182,53 +192,52 @@
                 </div>
 
                 <div id="custom-color-panel" style="display:none; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
-                    <div class="color-picker-wrap"><span>数据大框</span><input type="color" id="c-box" value="#transparent" oninput="updatePreview()"></div>
-                    <div class="color-picker-wrap"><span>数据小框</span><input type="color" id="c-item" value="#ffffff" oninput="updatePreview()"></div>
-                    <div class="color-picker-wrap"><span>字体色</span><input type="color" id="c-lbl" value="#a5acaa" oninput="updatePreview()"></div>
-                    <div class="color-picker-wrap"><span>动态色</span><input type="color" id="c-val" value="#788583" oninput="updatePreview()"></div>
+                    <div class="color-picker-wrap">
+                        <span>大框底色</span>
+                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-box" class="hex-input" oninput="document.getElementById('c-box').value=this.value; updatePreview();"><input type="color" id="c-box" value="#ffffff" oninput="document.getElementById('t-c-box').value=this.value; updatePreview();"></div>
+                    </div>
+                    <div class="color-picker-wrap">
+                        <span>小框底色</span>
+                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-item" class="hex-input" oninput="document.getElementById('c-item').value=this.value; updatePreview();"><input type="color" id="c-item" value="#f9f7f2" oninput="document.getElementById('t-c-item').value=this.value; updatePreview();"></div>
+                    </div>
+                    <div class="color-picker-wrap">
+                        <span>字体颜色</span>
+                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-lbl" class="hex-input" oninput="document.getElementById('c-lbl').value=this.value; updatePreview();"><input type="color" id="c-lbl" value="#a5acaa" oninput="document.getElementById('t-c-lbl').value=this.value; updatePreview();"></div>
+                    </div>
+                    <div class="color-picker-wrap">
+                        <span>动态数值</span>
+                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-val" class="hex-input" oninput="document.getElementById('c-val').value=this.value; updatePreview();"><input type="color" id="c-val" value="#788583" oninput="document.getElementById('t-c-val').value=this.value; updatePreview();"></div>
+                    </div>
                 </div>
 
-                <div class="label">自由调整排列与偏移</div>
+                <div class="label">拖拽改变模块顺序、文案与显隐</div>
+                <div class="sort-list form-group" id="sort-list"></div>
+
+                <div class="label">调整留白与偏移</div>
                 <div class="form-group toggle-group" style="grid-template-columns:1fr 1fr; margin-bottom:12px;">
                     <label class="toggle-item" for="ly-row"><input type="radio" id="ly-row" name="e-layout" value="row" onchange="updatePreview()"> 单行并排</label>
                     <label class="toggle-item" for="ly-grid"><input type="radio" id="ly-grid" name="e-layout" value="grid" onchange="updatePreview()"> 双行矩阵</label>
                 </div>
-                <div class="form-group" style="margin-bottom:24px;">
+                
+                <div class="form-group" style="margin-bottom:12px;">
                     <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-l); margin-bottom:5px;"><span>左偏移</span><span>居中</span><span>右偏移</span></div>
                     <input type="range" id="e-offset" min="-50" max="50" step="1" value="0" oninput="updatePreview()">
+                </div>
+                
+                <div style="display:flex; gap:12px; margin-bottom:24px;">
+                    <div style="flex:1;">
+                        <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">大框内距</div>
+                        <input type="range" id="e-pad-box" min="0" max="2" step="0.1" value="0.6" oninput="updatePreview()">
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">小框内距</div>
+                        <input type="range" id="e-pad-item" min="0.1" max="2" step="0.1" value="0.6" oninput="updatePreview()">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <div class="label">整体尺寸比例缩放</div>
                     <input type="range" id="e-scale" min="0.5" max="1" step="0.05" value="1" oninput="updatePreview()">
-                </div>
-
-                <div class="label">拖拽改变模块顺序与显隐</div>
-                <div class="sort-list form-group" id="sort-list"></div>
-
-                <div class="label" style="margin-top:24px;">修改展示文案</div>
-                <div style="display:flex; gap:12px;">
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-pv" oninput="updatePreview()"></div>
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-uv" oninput="updatePreview()"></div>
-                </div>
-                <div style="display:flex; gap:12px;">
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-dpv" oninput="updatePreview()"></div>
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-duv" oninput="updatePreview()"></div>
-                </div>
-
-                <div style="display:none;">
-                    <input type="checkbox" id="e-t-pv">
-                    <input type="checkbox" id="e-t-uv">
-                    <input type="checkbox" id="e-t-dpv">
-                    <input type="checkbox" id="e-t-duv">
-                </div>
-
-                <div style="margin-top: 30px;">
-                    <button class="btn btn-primary" id="btn-save-edit" onclick="saveEdit()" style="opacity:0.5; pointer-events:none;">无变动可保存</button>
-                    <div class="action-row">
-                        <button class="btn btn-outline" onclick="genLinkFromEdit()">获取代码</button>
-                        <button class="btn btn-danger" onclick="confirmDeleteFromEdit()">删除网站</button>
-                    </div>
                 </div>
             </div>
         </div>
@@ -239,6 +248,12 @@
         <div class="nav-item active" onclick="switchTab('site')"><span class="nav-icon">🌐</span>网站管理</div>
         <div class="nav-item" onclick="switchTab('stat')"><span class="nav-icon">📊</span>统计数据</div>
         <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>系统设置</div>
+    </div>
+    
+    <div class="edit-nav-bar" id="edit-nav-bar" style="display:none;">
+        <div class="edit-nav-item" onclick="promptSave()"><span class="icon">💾</span>保存修改</div>
+        <div class="edit-nav-item" onclick="genLinkFromEdit()"><span class="icon">🔗</span>获取代码</div>
+        <div class="edit-nav-item danger" onclick="confirmDeleteFromEdit()"><span class="icon">🗑️</span>删除网站</div>
     </div>
 
     <div class="modal-overlay" id="overlay">
@@ -256,7 +271,6 @@
         let isEditOpen = false;
         let sysHasPwd = false;
         let currentOrder = [];
-        let currentOriginalConfigStr = "";
         
         const keyMap = { pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客' };
         const tplDict = {
@@ -281,10 +295,6 @@
             19: { box: 'transparent', bg: '#fff5ee', border: '#ffdab9', val: '#ff4500', lbl: '#ffa07a' },
             20: { box: 'transparent', bg: '#ffffff', border: '#000000', val: '#000000', lbl: '#000000' }
         };
-
-        window.addEventListener('popstate', (e) => {
-            if (isEditOpen) closeEdit(true);
-        });
 
         function showToast(msg, ms=1500) {
             const t = document.getElementById('toast');
@@ -397,7 +407,7 @@
         }
 
         function confirmClearAll() {
-            openModal('警告', `清空所有配置及密码？不可恢复。`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认</button>`);
+            openModal('危险操作', `清空所有配置及密码？不可恢复。`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认</button>`);
         }
 
         async function doClearAll() {
@@ -426,11 +436,11 @@
             const list = document.getElementById('site-list');
             list.innerHTML = '';
             for (let site in configs) {
+                const cName = configs[site].configName || site;
                 const card = document.createElement('div');
                 card.className = 'site-card';
                 card.onclick = function() { openEdit(site); };
-                card.innerHTML = `<div class="site-domain" style="margin-bottom:0;"></div><div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>`;
-                card.querySelector('.site-domain').innerText = site;
+                card.innerHTML = `<div><div class="site-domain" style="margin-bottom:0;">${site}</div><div class="site-alias">${cName !== site ? '预设: '+cName : ''}</div></div><div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>`;
                 list.appendChild(card);
             }
             if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">还没有添加网站<br>点击右下角按钮添加</div>';
@@ -463,7 +473,7 @@
         }
 
         function showAddSiteModal() {
-            openModal('添加网站', `<input type="text" id="new-site-input" placeholder="输入名称" style="margin-top:10px;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmAddSite()">确认</button>`);
+            openModal('添加网站', `<input type="text" id="new-site-input" placeholder="输入名称" style="margin-top:10px; width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmAddSite()">确认</button>`);
             setTimeout(() => document.getElementById('new-site-input')?.focus(), 300);
         }
 
@@ -473,7 +483,9 @@
             closeModal();
             showToast('添加中...');
             configs[site] = { 
+                configName: site,
                 tpl: 1, scale: 1, offsetX: 0, layout: 'row', 
+                padBox: 0.6, padItem: 0.6,
                 useCustom: false, colors: { box: 'transparent', item: '#f9f7f2', lbl: '#a5acaa', val: '#788583' },
                 order: ['pv','uv','dpv','duv'], pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} 
             };
@@ -487,10 +499,13 @@
             list.innerHTML = '';
             currentOrder.forEach((k, idx) => {
                 const isChecked = document.getElementById(`e-t-${k}`).checked;
+                const vNode = document.getElementById(`e-v-${k}`);
+                const val = vNode ? vNode.value : keyMap[k];
                 list.innerHTML += `
                 <div class="sort-item" style="opacity:${isChecked?1:0.5};">
                     <label style="display:flex; align-items:center; gap:8px;" for="ls-t-${k}">
-                        <input type="checkbox" id="ls-t-${k}" ${isChecked?'checked':''} onchange="syncShows('${k}')"> ${keyMap[k]}
+                        <input type="checkbox" id="ls-t-${k}" ${isChecked?'checked':''} onchange="syncShows('${k}')">
+                        <input type="text" class="inline-name" value="${val}" oninput="syncName('${k}', this.value)" placeholder="展示文字">
                     </label>
                     <div class="sort-btns">
                         <span style="cursor:pointer; opacity:${idx===0?0.2:1};" onclick="moveOrder(${idx}, -1)">▲</span>
@@ -504,6 +519,11 @@
         function syncShows(k) {
             document.getElementById(`e-t-${k}`).checked = document.getElementById(`ls-t-${k}`).checked;
             renderSortList();
+        }
+        
+        function syncName(k, val) {
+            document.getElementById(`e-v-${k}`).value = val;
+            updatePreview();
         }
 
         function moveOrder(idx, dir) {
@@ -536,6 +556,9 @@
             const scale = parseFloat(document.getElementById('e-scale').value);
             const baseSize = 14 * scale;
             
+            const pb = document.getElementById('e-pad-box').value;
+            const pi = document.getElementById('e-pad-item').value;
+            
             const layoutNode = document.querySelector('input[name="e-layout"]:checked');
             const isGrid = layoutNode && layoutNode.value === 'grid';
             
@@ -544,46 +567,12 @@
             let items = [];
             currentOrder.forEach(k => {
                 if(document.getElementById(`e-t-${k}`).checked) {
-                    items.push(`<div style="flex: 0 0 ${isGrid?'calc(50% - 4px)':'auto'}; min-width:50px; background:${t.bg}; padding:0.6em 0.8em; border-radius:0.6em; border:1px solid ${t.border}; box-sizing:border-box; text-align:center;"><div style="font-size:0.75em; color:${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${names[k]}</div><div style="font-size:1.15em; color:${t.val}; font-weight:600;">888</div></div>`);
+                    items.push(`<div style="flex: 0 0 ${isGrid?'calc(50% - 4px)':'auto'}; min-width:50px; background:${t.bg}; padding:${pi}em ${pi*1.2}em; border-radius:${pi}em; border:1px solid ${t.border}; box-sizing:border-box; text-align:center;"><div style="font-size:0.75em; color:${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${names[k]}</div><div style="font-size:1.15em; color:${t.val}; font-weight:600;">888</div></div>`);
                 }
             });
 
-            const paddingBox = t.box && t.box !== 'transparent' ? 'padding:0.6em; border-radius:0.8em;' : '';
+            const paddingBox = t.box && t.box !== 'transparent' ? `padding:${pb}em; border-radius:${pb*1.2}em;` : '';
             document.getElementById('live-preview-container').innerHTML = `<div style="display:flex; justify-content:center; width:100%;"><div style="display:flex; flex-wrap:${isGrid?'wrap':'nowrap'}; gap:8px; justify-content:center; background:${t.box}; ${paddingBox} transform:translateX(${offsetX}%); font-family:-apple-system,sans-serif; font-size:${baseSize}px; line-height:1; width:max-content; max-width:100%; box-sizing:border-box;">${items.join('')}</div></div>`;
-            checkChanges();
-        }
-
-        function checkChanges() {
-            const site = document.getElementById('e-site-id').value;
-            if (!configs[site]) return;
-
-            const layoutNode = document.querySelector('input[name="e-layout"]:checked');
-            const currObj = {
-                tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
-                scale: parseFloat(document.getElementById('e-scale').value) || 1,
-                offsetX: parseInt(document.getElementById('e-offset').value) || 0,
-                layout: layoutNode ? layoutNode.value : 'row',
-                useCustom: document.getElementById('e-use-custom').checked,
-                colors: { box: document.getElementById('c-box').value, item: document.getElementById('c-item').value, lbl: document.getElementById('c-lbl').value, val: document.getElementById('c-val').value },
-                order: currentOrder,
-                pv: document.getElementById('e-v-pv').value,
-                uv: document.getElementById('e-v-uv').value,
-                dpv: document.getElementById('e-v-dpv').value,
-                duv: document.getElementById('e-v-duv').value,
-                shows: {
-                    pv: document.getElementById('e-t-pv').checked,
-                    uv: document.getElementById('e-t-uv').checked,
-                    dpv: document.getElementById('e-t-dpv').checked,
-                    duv: document.getElementById('e-t-duv').checked
-                }
-            };
-            
-            const btn = document.getElementById('btn-save-edit');
-            if (JSON.stringify(currObj) !== currentOriginalConfigStr) {
-                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.innerText = '保存修改';
-            } else {
-                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.innerText = '无变动不可存';
-            }
         }
 
         function openEdit(site) {
@@ -594,6 +583,13 @@
                 currentOrder = Array.isArray(c.order) ? [...c.order] : ['pv','uv','dpv','duv'];
                 const shows = c.shows || {pv:true, uv:true, dpv:true, duv:true};
                 
+                if(!document.getElementById('e-t-pv')) {
+                    const hiddenDiv = document.createElement('div');
+                    hiddenDiv.style.display = 'none';
+                    hiddenDiv.innerHTML = `<input type="checkbox" id="e-t-pv"><input type="checkbox" id="e-t-uv"><input type="checkbox" id="e-t-dpv"><input type="checkbox" id="e-t-duv"><input type="text" id="e-v-pv"><input type="text" id="e-v-uv"><input type="text" id="e-v-dpv"><input type="text" id="e-v-duv">`;
+                    document.body.appendChild(hiddenDiv);
+                }
+
                 document.getElementById('e-t-pv').checked = !!shows.pv;
                 document.getElementById('e-t-uv').checked = !!shows.uv;
                 document.getElementById('e-t-dpv').checked = !!shows.dpv;
@@ -601,6 +597,8 @@
                 
                 document.getElementById('e-offset').value = c.offsetX || 0;
                 document.getElementById('e-scale').value = c.scale || 1;
+                document.getElementById('e-pad-box').value = c.padBox !== undefined ? c.padBox : 0.6;
+                document.getElementById('e-pad-item').value = c.padItem !== undefined ? c.padItem : 0.6;
                 document.getElementById('e-tpl-select').value = c.tpl || 1;
                 
                 document.getElementById('e-use-custom').checked = !!c.useCustom;
@@ -609,6 +607,10 @@
                 document.getElementById('c-item').value = colors.item;
                 document.getElementById('c-lbl').value = colors.lbl;
                 document.getElementById('c-val').value = colors.val;
+                document.getElementById('t-c-box').value = document.getElementById('c-box').value;
+                document.getElementById('t-c-item').value = colors.item;
+                document.getElementById('t-c-lbl').value = colors.lbl;
+                document.getElementById('t-c-val').value = colors.val;
 
                 const layoutRadios = document.getElementsByName('e-layout');
                 for(let r of layoutRadios) { if(r.value === (c.layout || 'row')) r.checked = true; }
@@ -619,52 +621,37 @@
                 document.getElementById('e-v-duv').value = c.duv || '今日访客';
 
                 renderSortList();
-                
-                const currentLayoutNode = document.querySelector('input[name="e-layout"]:checked');
-                const currObj = {
-                    tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
-                    scale: parseFloat(document.getElementById('e-scale').value) || 1,
-                    offsetX: parseInt(document.getElementById('e-offset').value) || 0,
-                    layout: currentLayoutNode ? currentLayoutNode.value : 'row',
-                    useCustom: !!c.useCustom,
-                    colors: colors,
-                    order: currentOrder,
-                    pv: document.getElementById('e-v-pv').value,
-                    uv: document.getElementById('e-v-uv').value,
-                    dpv: document.getElementById('e-v-dpv').value,
-                    duv: document.getElementById('e-v-duv').value,
-                    shows: { pv: !!shows.pv, uv: !!shows.uv, dpv: !!shows.dpv, duv: !!shows.duv }
-                };
-                currentOriginalConfigStr = JSON.stringify(currObj);
-                checkChanges();
 
                 document.getElementById('btn-back').style.display = 'flex';
                 document.getElementById('fab-add').style.display = 'none';
+                document.getElementById('nav-bar').style.display = 'none';
+                document.getElementById('edit-nav-bar').style.display = 'flex';
                 document.getElementById('view-edit').classList.add('show');
                 isEditOpen = true;
-                try { history.pushState({view: 'edit'}, ''); } catch(e) {}
             } catch (e) {
                 showToast('读取配置失败');
             }
         }
 
-        function handleBackBtn() { if (isEditOpen) history.back(); }
-
-        function closeEdit(fromPop = false) {
-            document.getElementById('view-edit').classList.remove('show');
-            document.getElementById('btn-back').style.display = 'none';
-            document.getElementById('fab-add').style.display = 'flex';
-            isEditOpen = false;
-            if(!fromPop) history.back();
+        function promptSave() {
+            const site = document.getElementById('e-site-id').value;
+            const c = configs[site] || {};
+            const cName = c.configName || site;
+            openModal('保存配置', `<div class="label" style="text-align:left;">为当前配置命名留存：</div><input type="text" id="save-config-name" value="${cName}" style="width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; margin-bottom:10px;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="executeSave()">确认保存</button>`);
         }
 
-        async function saveEdit() {
+        async function executeSave() {
+            const configName = document.getElementById('save-config-name').value.trim();
+            closeModal();
             const site = document.getElementById('e-site-id').value;
             const layoutNode = document.querySelector('input[name="e-layout"]:checked');
             configs[site] = {
+                configName: configName || site,
                 tpl: parseInt(document.getElementById('e-tpl-select').value),
                 scale: parseFloat(document.getElementById('e-scale').value),
                 offsetX: parseInt(document.getElementById('e-offset').value),
+                padBox: parseFloat(document.getElementById('e-pad-box').value),
+                padItem: parseFloat(document.getElementById('e-pad-item').value),
                 layout: layoutNode ? layoutNode.value : 'row',
                 useCustom: document.getElementById('e-use-custom').checked,
                 colors: { box: document.getElementById('c-box').value, item: document.getElementById('c-item').value, lbl: document.getElementById('c-lbl').value, val: document.getElementById('c-val').value },
@@ -683,9 +670,19 @@
             
             showToast('保存中...');
             await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
-            currentOriginalConfigStr = JSON.stringify(configs[site]);
-            checkChanges();
+            renderSites();
             showToast('保存成功');
+        }
+
+        function handleBackBtn() { closeEdit(); }
+
+        function closeEdit() {
+            document.getElementById('view-edit').classList.remove('show');
+            document.getElementById('btn-back').style.display = 'none';
+            document.getElementById('fab-add').style.display = 'flex';
+            document.getElementById('nav-bar').style.display = 'flex';
+            document.getElementById('edit-nav-bar').style.display = 'none';
+            isEditOpen = false;
         }
 
         function confirmDeleteFromEdit() {
@@ -707,7 +704,7 @@
         function genLinkFromEdit() {
             const site = document.getElementById('e-site-id').value;
             const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
-            openModal('专属统计代码', `<div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制</button>`);
+            openModal('专属代码', `<div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制</button>`);
         }
 
         function copyCode(site) {
