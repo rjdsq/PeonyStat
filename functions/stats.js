@@ -13,14 +13,14 @@ export async function onRequest(context) {
     if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     if (action === 'get_sys') {
-        const pwd = await env.RE_STAT.get('sys_pwd');
+        const pwd = await env.stat.get('sys_pwd');
         return new Response(JSON.stringify({ has_pwd: !!pwd }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
     if (action === 'login' && request.method === 'POST') {
         let data = {};
         try { data = await request.json(); } catch(e) {}
-        const pwd = await env.RE_STAT.get('sys_pwd');
+        const pwd = await env.stat.get('sys_pwd');
         return new Response(JSON.stringify({ ok: data.pwd === pwd }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
@@ -28,20 +28,20 @@ export async function onRequest(context) {
         let data = {};
         try { data = await request.json(); } catch(e) {}
         if (data.pwd) {
-            await env.RE_STAT.put('sys_pwd', data.pwd);
+            await env.stat.put('sys_pwd', data.pwd);
         } else {
-            await env.RE_STAT.delete('sys_pwd');
+            await env.stat.delete('sys_pwd');
         }
         return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
     const k_config = "all_sites_config";
-    let configStr = await env.RE_STAT.get(k_config);
+    let configStr = await env.stat.get(k_config);
     let allConfigs = configStr ? JSON.parse(configStr) : {};
 
     if (action === 'clear_all' && request.method === 'POST') {
-        await env.RE_STAT.put(k_config, JSON.stringify({}));
-        await env.RE_STAT.delete('sys_pwd');
+        await env.stat.put(k_config, JSON.stringify({}));
+        await env.stat.delete('sys_pwd');
         return new Response(JSON.stringify({ status: "ok" }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
@@ -54,7 +54,7 @@ export async function onRequest(context) {
         try { newConf = await request.json(); } catch(e) {}
         if (newConf.site) {
             allConfigs[newConf.site] = newConf;
-            await env.RE_STAT.put(k_config, JSON.stringify(allConfigs));
+            await env.stat.put(k_config, JSON.stringify(allConfigs));
         }
         return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
@@ -64,7 +64,7 @@ export async function onRequest(context) {
         try { data = await request.json(); } catch(e) {}
         if (data.site && allConfigs[data.site]) {
             delete allConfigs[data.site];
-            await env.RE_STAT.put(k_config, JSON.stringify(allConfigs));
+            await env.stat.put(k_config, JSON.stringify(allConfigs));
         }
         return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
@@ -136,17 +136,17 @@ export async function onRequest(context) {
         const k_ipt = `s_${site}_ipt_${dateStr}_${ip}`;
 
         const [v_pv, v_uv, v_dpv, v_duv, v_ipe, v_ipt] = await Promise.all([
-            env.RE_STAT.get(k_pv), env.RE_STAT.get(k_uv), env.RE_STAT.get(k_dpv), env.RE_STAT.get(k_duv), env.RE_STAT.get(k_ipe), env.RE_STAT.get(k_ipt)
+            env.stat.get(k_pv), env.stat.get(k_uv), env.stat.get(k_dpv), env.stat.get(k_duv), env.stat.get(k_ipe), env.stat.get(k_ipt)
         ]);
 
         let pv = parseInt(v_pv || "0") + 1;
         let dpv = parseInt(v_dpv || "0") + 1;
         let uv = parseInt(v_uv || "0");
         let duv = parseInt(v_duv || "0");
-        const tasks = [env.RE_STAT.put(k_pv, pv.toString()), env.RE_STAT.put(k_dpv, dpv.toString(), { expirationTtl: 86400 * 30 })];
+        const tasks = [env.stat.put(k_pv, pv.toString()), env.stat.put(k_dpv, dpv.toString(), { expirationTtl: 86400 * 30 })];
 
-        if (!v_ipe) { uv++; tasks.push(env.RE_STAT.put(k_uv, uv.toString())); tasks.push(env.RE_STAT.put(k_ipe, "1")); }
-        if (!v_ipt) { duv++; tasks.push(env.RE_STAT.put(k_duv, duv.toString(), { expirationTtl: 86400 * 2 })); tasks.push(env.RE_STAT.put(k_ipt, "1", { expirationTtl: 86400 * 2 })); }
+        if (!v_ipe) { uv++; tasks.push(env.stat.put(k_uv, uv.toString())); tasks.push(env.stat.put(k_ipe, "1")); }
+        if (!v_ipt) { duv++; tasks.push(env.stat.put(k_duv, duv.toString(), { expirationTtl: 86400 * 2 })); tasks.push(env.stat.put(k_ipt, "1", { expirationTtl: 86400 * 2 })); }
 
         waitUntil(Promise.all(tasks));
         return new Response(JSON.stringify({ pv, uv, dpv, duv }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
@@ -157,10 +157,10 @@ export async function onRequest(context) {
         const siteIds = Object.keys(allConfigs);
         const promises = [];
         for (let s of siteIds) {
-            promises.push(env.RE_STAT.get(`s_${s}_pv`));
-            promises.push(env.RE_STAT.get(`s_${s}_uv`));
-            promises.push(env.RE_STAT.get(`s_${s}_dpv_${dateStr}`));
-            promises.push(env.RE_STAT.get(`s_${s}_duv_${dateStr}`));
+            promises.push(env.stat.get(`s_${s}_pv`));
+            promises.push(env.stat.get(`s_${s}_uv`));
+            promises.push(env.stat.get(`s_${s}_dpv_${dateStr}`));
+            promises.push(env.stat.get(`s_${s}_duv_${dateStr}`));
         }
         const values = await Promise.all(promises);
         let idx = 0;
