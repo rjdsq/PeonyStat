@@ -3,146 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>流体统计中枢 V2</title>
+    <title>Analytics Dashboard</title>
     <style>
         :root {
-            --bg: #0a0a0a; --card: #141414; --text-m: #e0e0e0; --text-l: #888888;
-            --primary: #64ffda; --border: #2a2a2a; --danger: #ff4c4c;
+            --bg: #f9fafb; --card: #ffffff; --text-p: #111827; --text-s: #6b7280;
+            --primary: #2563eb; --border: #e5e7eb; --danger: #ef4444;
+            --radius: 16px;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text-m); overflow: hidden; height: 100vh; }
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text-p); overflow: hidden; height: 100vh; }
         
-        .header { background: var(--card); height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; letter-spacing: 1px; color: #fff; }
-        .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; font-weight: 500; }
-        .header .btn-delete-top { position: absolute; right: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--danger); display: none; cursor: pointer; font-weight: 500; }
+        .header { background: var(--card); height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
+        .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 56px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; }
         
-        .view-container { position: relative; height: calc(100vh - 54px - env(safe-area-inset-top)); overflow: hidden; }
-        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .view-container { position: relative; height: calc(100vh - 56px - env(safe-area-inset-top)); overflow: hidden; }
+        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(100px + env(safe-area-inset-bottom)) 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .view.active { opacity: 1; pointer-events: auto; }
         
-        #view-edit { transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; padding: 0; }
-        #view-edit.show { transform: translateY(0); }
-        .edit-scroll-box { padding: 20px 20px 120px 20px; }
+        #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; padding: 0; }
+        #view-edit.show { transform: translateX(0); }
+        .edit-scroll-box { padding: 16px 16px 120px 16px; }
         
         #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; }
-        .nav-item { text-align: center; color: var(--text-l); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: 0.2s; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; }
+        .nav-item { text-align: center; color: var(--text-s); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: color 0.2s; font-weight: 500; }
         .nav-item.active { color: var(--primary); font-weight: 600; }
-        .nav-icon { font-size: 22px; margin-bottom: 4px; display: block; filter: grayscale(1); opacity: 0.6; }
-        .nav-item.active .nav-icon { filter: grayscale(0); opacity: 1; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; display: block; opacity: 0.7; }
+        .nav-item.active .nav-icon { opacity: 1; }
 
-        .edit-nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(20,20,20,0.85); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 40; }
-        .edit-nav-item { flex: 1; text-align: center; font-size: 14px; color: var(--text-m); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 10px 0; }
-        .edit-nav-item .icon { font-size: 20px; }
-
-        .card { background: var(--card); border-radius: 18px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); }
-        .card-header { font-weight: 600; margin-bottom: 16px; font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card-title { font-weight: 600; font-size: 15px; color: var(--text-p); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
         
-        .indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); display: inline-block; box-shadow: 0 0 10px var(--primary); }
-
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stat-box { background: rgba(255,255,255,0.03); padding: 16px 12px; border-radius: 14px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
-        .stat-label { font-size: 12px; color: var(--text-l); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-val { font-size: 24px; font-weight: 700; color: #fff; font-family: monospace; }
+        .stat-box { background: var(--bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
+        .stat-label { font-size: 12px; color: var(--text-s); margin-bottom: 8px; }
+        .stat-val { font-size: 24px; font-weight: 700; color: var(--text-p); letter-spacing: -0.5px; }
 
-        .site-card { background: var(--card); border-radius: 18px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; }
-        .site-card:active { transform: scale(0.98); }
-        .site-domain { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-        .site-alias { font-size: 12px; color: var(--text-l); }
-
-        .fab { position: fixed; bottom: calc(105px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: #000; font-size: 28px; box-shadow: 0 0 20px rgba(100, 255, 218, 0.4); z-index: 15; cursor: pointer; display: none; }
+        .site-list-item { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; transition: 0.1s; }
+        .site-list-item:active { transform: scale(0.98); background: var(--bg); }
+        .site-domain { font-size: 15px; font-weight: 600; }
+        
+        .fab { position: fixed; bottom: calc(100px + env(safe-area-inset-bottom)); right: 20px; width: 50px; height: 50px; background: var(--text-p); border-radius: 25px; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 15; cursor: pointer; display: none; }
         .fab:active { transform: scale(0.9); }
 
-        .form-group { margin-bottom: 18px; }
-        .label { font-size: 13px; color: var(--text-m); margin-bottom: 10px; font-weight: 500; }
-        input[type="text"], input[type="password"], select.native-select { width: 100%; background: var(--bg); border: 1px solid var(--border); height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; color: #fff; outline: none; -webkit-appearance: none; }
-        input:focus, select.native-select:focus { border-color: var(--primary); }
+        .form-group { margin-bottom: 16px; }
+        .label { font-size: 13px; color: var(--text-s); margin-bottom: 8px; font-weight: 500; }
+        input[type="text"], input[type="password"], select { width: 100%; background: var(--bg); border: 1px solid var(--border); height: 44px; padding: 0 16px; border-radius: 10px; font-size: 14px; color: var(--text-p); outline: none; -webkit-appearance: none; }
+        input:focus, select:focus { border-color: var(--primary); background: var(--card); }
         
-        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
-        .toggle-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-m); }
-        input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; accent-color: var(--primary); }
-        
-        .hex-input { width: 100px !important; height: 34px !important; padding: 0 10px !important; font-family: monospace; text-align: center; font-size: 14px !important; border-radius: 8px !important; border: 1px solid var(--border); background: var(--card) !important; margin: 0;}
+        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .toggle-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-p); padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
+        input[type="radio"] { width: 18px; height: 18px; accent-color: var(--primary); }
 
-        .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; color: #000; }
-        .btn-primary { background: var(--primary); }
-        .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
+        .btn { width: 100%; height: 46px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.1s; }
+        .btn-primary { background: var(--text-p); color: white; }
+        .btn-danger { background: #fee2e2; color: var(--danger); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-p); }
         .btn:active { transform: scale(0.97); }
-        .action-row { display: flex; gap: 12px; margin-top: 16px; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
-        .modal { background: var(--card); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; border: 1px solid var(--border); transform: scale(0.9); opacity: 0; transition: 0.2s; }
-        .modal.show { transform: scale(1); opacity: 1; }
-        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; text-align: center; color: #fff; }
-        .modal-body { font-size: 14px; color: var(--text-m); margin-bottom: 24px; text-align: center; line-height: 1.6; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal { background: var(--card); width: 100%; max-width: 320px; border-radius: 16px; padding: 24px; opacity: 0; transform: scale(0.95); transition: 0.2s; }
+        .modal.show { opacity: 1; transform: scale(1); }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; text-align: center; }
+        .modal-body { font-size: 14px; color: var(--text-s); margin-bottom: 24px; text-align: center; line-height: 1.5; }
         
-        .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; text-align: left; color: var(--primary); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
+        .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; word-break: break-all; color: var(--text-p); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
         
-        .chart-row { display: flex; align-items: center; margin-bottom: 8px; font-size: 12px; }
-        .chart-lbl { width: 80px; color: var(--text-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chart-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; margin: 0 10px; }
-        .chart-bar { height: 100%; background: var(--primary); border-radius: 3px; }
-        .chart-val { width: 30px; text-align: right; color: #fff; font-family: monospace; }
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(17,24,39,0.9); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: none; z-index: 200; font-weight: 500; }
         
-        .toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: #fff; color: #000; padding: 14px 28px; border-radius: 14px; font-size: 15px; display: none; z-index: 200; font-weight: 600; box-shadow: 0 10px 30px rgba(255,255,255,0.2); }
+        /* 报表图表条 */
+        .bar-list { display: flex; flex-direction: column; gap: 12px; }
+        .bar-row { display: flex; flex-direction: column; gap: 4px; }
+        .bar-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-p); }
+        .bar-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--primary); border-radius: 3px; }
+        .bar-val { color: var(--text-s); font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div class="header" id="header-bar" style="display:none;">
-        <div class="btn-back" id="btn-back" onclick="handleBackBtn()">＜ 矩阵</div>
-        <span id="sys-title">流体统计中枢</span>
-        <div class="btn-delete-top" id="btn-delete-top" onclick="confirmDeleteFromEdit()">重置节点</div>
+        <div class="btn-back" id="btn-back" onclick="closeEdit()">＜ 返回</div>
+        <span id="sys-title">数据大盘</span>
     </div>
 
     <div id="view-login" class="view">
-        <div class="card" style="width:100%; max-width:340px; background:transparent; border:none;">
-            <div class="card-header" style="justify-content:center; font-size:24px; color:var(--primary); letter-spacing:2px; margin-bottom:40px;">系统握手</div>
-            <div class="form-group"><input type="text" id="login-pwd" placeholder="输入访问密钥" style="-webkit-text-security:disc; text-align:center; font-size:18px;"></div>
-            <div class="form-group toggle-item" style="justify-content:center; margin-bottom:30px;">
-                <input type="checkbox" id="login-rem" checked> <label for="login-rem">建立加密长链接</label>
-            </div>
-            <button class="btn btn-primary" onclick="doLogin()">建立通讯</button>
+        <div class="card" style="width:100%; max-width:320px; border:none; box-shadow:none; background:transparent;">
+            <div style="text-align:center; font-size:24px; font-weight:700; margin-bottom:30px; color:var(--text-p);">Analytics</div>
+            <div class="form-group"><input type="password" id="login-pwd" placeholder="输入访问密钥"></div>
+            <button class="btn btn-primary" onclick="doLogin()">进入系统</button>
         </div>
     </div>
 
     <div class="view-container" id="main-container" style="display:none;">
         
-        <div id="tab-site" class="view active" style="padding-bottom:120px;">
-            <div id="site-list"></div>
-        </div>
-        <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
-
-        <div id="tab-stat" class="view" style="padding-bottom:120px;">
+        <div id="tab-stat" class="view active">
             <div class="form-group">
-                <select id="stat-selector" class="native-select" style="font-weight:600; color:var(--primary); border-color:var(--primary);" onchange="selectStat(this.value)"></select>
+                <select id="stat-selector" onchange="selectStat(this.value)"></select>
             </div>
-            <div class="card" style="border-color:var(--primary);">
-                <div class="card-header"><span class="indicator"></span> <span id="stat-view-title">全域雷达探测</span></div>
+            
+            <div class="card">
+                <div class="card-title" id="stat-view-title">核心指标</div>
                 <div class="stat-grid">
-                    <div class="stat-box"><div class="stat-label">流年总域 (PV)</div><div class="stat-val" id="all-pv">-</div></div>
-                    <div class="stat-box"><div class="stat-label">独立灵魂 (UV)</div><div class="stat-val" id="all-uv">-</div></div>
-                    <div class="stat-box"><div class="stat-label">今日潮汐 (PV)</div><div class="stat-val" id="all-dpv">-</div></div>
-                    <div class="stat-box"><div class="stat-label">此刻心跳 (Online)</div><div class="stat-val" style="color:var(--primary);" id="all-duv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">总浏览量</div><div class="stat-val" id="d-pv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">独立访客</div><div class="stat-val" id="d-uv">-</div></div>
+                    <div class="stat-box"><div class="stat-label">今日浏览</div><div class="stat-val" id="d-dpv">-</div></div>
+                    <div class="stat-box" style="border-color:var(--primary); background:rgba(37,99,235,0.05);"><div class="stat-label" style="color:var(--primary);">实时在线</div><div class="stat-val" style="color:var(--primary);" id="d-duv">-</div></div>
                 </div>
             </div>
-            <div id="stat-detail-list"></div>
+
+            <div id="stat-detail-panels"></div>
         </div>
 
-        <div id="tab-sys" class="view" style="padding-bottom:120px;">
+        <div id="tab-site" class="view">
+            <div id="site-list"></div>
+            <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
+        </div>
+
+        <div id="tab-sys" class="view">
             <div class="card">
-                <div class="card-header"><span class="indicator" style="background:#fff; box-shadow:0 0 10px #fff;"></span> 安全协议配置</div>
-                <div class="form-group"><input type="text" id="sys-pwd" placeholder="设置底层访问密钥 (留空即无锁)" oninput="handleSysPwdInput()"></div>
-                <div class="form-group toggle-item" id="sec-rem-pwd" style="display:none; justify-content:space-between; margin-bottom:20px;">
-                    <label for="sys-rem-checkbox">持久化本机认证凭证</label><input type="checkbox" id="sys-rem-checkbox" checked>
+                <div class="card-title">系统与安全</div>
+                <div class="form-group">
+                    <div class="label">访问密码 (留空取消验证)</div>
+                    <input type="text" id="sys-pwd" placeholder="设置新密码">
                 </div>
-                <button class="btn btn-outline" onclick="saveSysConfig()">更新底层协议</button>
-                <button class="btn btn-outline" id="sec-logout" style="display:none; margin-top:12px; border-color:var(--danger); color:var(--danger);" onclick="logout()">熔断当前链接</button>
+                <button class="btn btn-primary" style="margin-bottom:12px;" onclick="saveSysConfig()">保存设置</button>
+                <button class="btn btn-outline" id="sec-logout" style="display:none;" onclick="logout()">退出当前会话</button>
             </div>
             <div class="card">
-                <button class="btn btn-danger" style="border:none;" onclick="confirmClearAll()">抹除系统全域数据 (核弹级)</button>
+                <div class="card-title" style="color:var(--danger);">危险操作</div>
+                <p style="font-size:13px; color:var(--text-s); margin-bottom:16px;">永久清除所有站点的统计数据及配置。</p>
+                <button class="btn btn-danger" onclick="confirmClearAll()">清空所有数据</button>
             </div>
         </div>
 
@@ -151,32 +143,30 @@
                 <input type="hidden" id="e-site-id">
                 
                 <div class="card">
-                    <div class="card-header"><span class="indicator"></span> 灵动岛探针生成仪</div>
-                    <div style="font-size:12px; color:var(--text-l); margin-bottom:20px; line-height:1.5;">开启的模块将融合入悬浮微胶囊中。胶囊吸附于网页边缘，点击呈流体形态展开。</div>
+                    <div class="card-title">探针形态</div>
+                    <p style="font-size:13px; color:var(--text-s); margin-bottom:16px; line-height:1.5;">专业统计默认隐形静默运行，不干扰网页设计。若需在网页公开展示数据，可开启状态徽章。</p>
                     
-                    <div class="toggle-group form-group">
-                        <label class="toggle-item"><input type="checkbox" id="e-t-pv"> 总访问流</label>
-                        <label class="toggle-item"><input type="checkbox" id="e-t-uv"> 独立访客</label>
-                        <label class="toggle-item"><input type="checkbox" id="e-t-online"> 实时心跳</label>
-                        <label class="toggle-item"><input type="checkbox" id="e-t-geo"> 方位探测</label>
-                        <label class="toggle-item"><input type="checkbox" id="e-t-dev"> 终端解析</label>
+                    <div class="form-group toggle-group">
+                        <label class="toggle-item"><input type="radio" name="e-mode" value="invisible" checked> 隐形静默运行</label>
+                        <label class="toggle-item"><input type="radio" name="e-mode" value="badge"> 极简状态徽章</label>
                     </div>
 
-                    <div class="form-group">
-                        <div class="label">胶囊吸附象限</div>
-                        <select id="e-pos" class="native-select">
-                            <option value="bottom-left">↙ 左下方沉底</option>
-                            <option value="bottom-right">↘ 右下方沉底</option>
+                    <div class="form-group" id="badge-theme-sec">
+                        <div class="label">徽章明暗主题</div>
+                        <select id="e-theme">
+                            <option value="light">浅色模式 (Light)</option>
+                            <option value="dark">深色模式 (Dark)</option>
                         </select>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <div class="label">提取网站品牌主视觉 (HEX)</div>
-                        <div style="display:flex; gap:12px; align-items:center;">
-                            <input type="color" id="c-brand-picker" value="#64ffda" style="width:48px; height:48px; border:none; border-radius:12px; padding:0; background:transparent; cursor:pointer;" oninput="document.getElementById('e-brand').value=this.value;">
-                            <input type="text" id="e-brand" class="hex-input" style="flex:1;" value="#64ffda" oninput="document.getElementById('c-brand-picker').value=this.value;">
-                        </div>
+                <div class="card">
+                    <div class="card-title">部署与卸载</div>
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn btn-primary" style="flex:2;" onclick="saveEdit()">保存修改</button>
+                        <button class="btn btn-outline" style="flex:1;" onclick="genLinkFromEdit()">代码</button>
                     </div>
+                    <button class="btn btn-danger" style="margin-top:12px;" onclick="confirmDeleteFromEdit()">彻底删除该网站</button>
                 </div>
             </div>
         </div>
@@ -184,21 +174,16 @@
     </div>
 
     <div class="nav-bar" id="nav-bar" style="display:none;">
-        <div class="nav-item active" onclick="switchTab('site')"><span class="nav-icon">⎛</span>节点矩阵</div>
-        <div class="nav-item" onclick="switchTab('stat')"><span class="nav-icon">⚗️</span>全息透视</div>
-        <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>底层协议</div>
-    </div>
-    
-    <div class="edit-nav-bar" id="edit-nav-bar" style="display:none;">
-        <div class="edit-nav-item" style="color:var(--primary);" onclick="genLinkFromEdit()"><span class="icon">🔌</span>装载代码</div>
-        <div class="edit-nav-item" style="border-left:1px solid var(--border);" onclick="promptSave()"><span class="icon">💾</span>固化协议</div>
+        <div class="nav-item active" onclick="switchTab('stat')"><span class="nav-icon">📊</span>数据大盘</div>
+        <div class="nav-item" onclick="switchTab('site')"><span class="nav-icon">🌐</span>网站管理</div>
+        <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>系统设置</div>
     </div>
 
     <div class="modal-overlay" id="overlay">
         <div class="modal" id="modal">
-            <div class="modal-title" id="md-title">指令拦截</div>
+            <div class="modal-title" id="md-title"></div>
             <div class="modal-body" id="md-body"></div>
-            <div class="action-row" id="md-actions"></div>
+            <div style="display:flex; gap:12px;" id="md-actions"></div>
         </div>
     </div>
     <div class="toast" id="toast"></div>
@@ -207,21 +192,17 @@
         let configs = {};
         let allStatsData = null; 
         let isEditOpen = false;
-        let sysHasPwd = false;
 
-        function showToast(msg, ms=1500) {
+        function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg;
             t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, ms);
+            setTimeout(() => { t.style.display = 'none'; }, 2000);
         }
 
-        function openModal(title, bodyContent, actionsHtml) {
+        function openModal(title, bodyHtml, actionsHtml) {
             document.getElementById('md-title').innerText = title;
-            const mdBody = document.getElementById('md-body');
-            mdBody.innerHTML = '';
-            if (typeof bodyContent === 'string') mdBody.innerHTML = bodyContent;
-            else mdBody.appendChild(bodyContent);
+            document.getElementById('md-body').innerHTML = bodyHtml;
             document.getElementById('md-actions').innerHTML = actionsHtml;
             document.getElementById('overlay').style.display = 'flex';
             setTimeout(() => document.getElementById('modal').classList.add('show'), 10);
@@ -238,103 +219,69 @@
             document.getElementById('tab-' + tab).classList.add('active');
             event.currentTarget.classList.add('active');
             
-            const fab = document.getElementById('fab-add');
-            if (tab === 'site' && !isEditOpen) fab.style.display = 'flex';
-            else fab.style.display = 'none';
+            document.getElementById('fab-add').style.display = (tab === 'site' && !isEditOpen) ? 'flex' : 'none';
+            document.getElementById('sys-title').innerText = tab === 'stat' ? '数据大盘' : (tab === 'site' ? '网站管理' : '系统设置');
+            
             if(tab === 'stat') loadAllStats();
-        }
-
-        function handleSysPwdInput() {
-            const val = document.getElementById('sys-pwd').value.trim();
-            document.getElementById('sec-rem-pwd').style.display = val ? 'flex' : 'none';
-        }
-
-        function updateSysUI() {
-            if (sysHasPwd) {
-                document.getElementById('sec-rem-pwd').style.display = 'flex';
-                document.getElementById('sec-logout').style.display = 'flex';
-            } else {
-                document.getElementById('sec-rem-pwd').style.display = 'none';
-                document.getElementById('sec-logout').style.display = 'none';
-            }
         }
 
         async function bootSys() {
             const res = await fetch('/stats?action=get_sys');
             const data = await res.json();
-            sysHasPwd = data.has_pwd;
             
-            if (sysHasPwd) {
-                document.getElementById('sec-logout').style.display = 'flex';
+            if (data.has_pwd) {
+                document.getElementById('sec-logout').style.display = 'block';
                 const savedPwd = localStorage.getItem('sys_pwd');
                 if (savedPwd) {
                     const lRes = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd: savedPwd}) });
                     const lData = await lRes.json();
-                    if (lData.ok) { return initApp(); }
+                    if (lData.ok) return initApp();
                 }
                 document.getElementById('view-login').style.display = 'flex';
             } else {
-                document.getElementById('sec-logout').style.display = 'none';
                 initApp();
             }
         }
 
         async function doLogin() {
             const pwd = document.getElementById('login-pwd').value;
-            const rem = document.getElementById('login-rem').checked;
-            if(!pwd) return showToast('阻断：密钥空缺');
-            showToast('破解验证中...', 1000);
+            if(!pwd) return showToast('请输入密码');
             const res = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd}) });
             const data = await res.json();
             if (data.ok) {
-                if (rem) localStorage.setItem('sys_pwd', pwd);
+                localStorage.setItem('sys_pwd', pwd);
                 initApp();
             } else {
-                showToast('拦截：签名无效');
+                showToast('密码错误');
             }
         }
 
-        function logout() {
-            localStorage.removeItem('sys_pwd');
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('sys_pwd'); location.reload(); }
 
         async function saveSysConfig() {
             const pwd = document.getElementById('sys-pwd').value.trim();
             document.getElementById('sys-pwd').value = pwd; 
-            const rem = document.getElementById('sys-rem-checkbox').checked;
-            showToast('烧录协议中...');
             await fetch('/stats?action=save_sys', { method: 'POST', body: JSON.stringify({pwd}) });
-            if (pwd) {
-                sysHasPwd = true;
-                document.getElementById('sec-logout').style.display = 'flex';
-                if (rem) localStorage.setItem('sys_pwd', pwd);
-                else localStorage.removeItem('sys_pwd');
-            } else {
-                sysHasPwd = false;
-                document.getElementById('sec-logout').style.display = 'none';
-                localStorage.removeItem('sys_pwd');
-            }
-            updateSysUI();
-            showToast('底层认证更迭完毕');
+            if (pwd) localStorage.setItem('sys_pwd', pwd);
+            else localStorage.removeItem('sys_pwd');
+            showToast('设置已保存');
+            setTimeout(() => location.reload(), 1000);
         }
 
         function confirmClearAll() {
-            openModal('终极销毁预警', `<div style="color:var(--danger); font-size:16px;">指令确认：执行全域 KV 擦除？</div><br>此操作将永久熔断所有部署的雷达探针，不可逆转。`, `<button class="btn btn-outline" onclick="closeModal()">终止执行</button><button class="btn btn-danger" onclick="doClearAll()">执行销毁</button>`);
+            openModal('警告', '此操作将彻底清空系统内所有配置及历史流量数据。', `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认清空</button>`);
         }
 
         async function doClearAll() {
             closeModal();
-            showToast('KV 阵列格式化...', 3000);
+            showToast('清理中...');
             await fetch('/stats?action=clear_all', { method: 'POST' });
             localStorage.removeItem('sys_pwd');
             location.reload();
         }
 
         async function initApp() {
-            const savedPwd = localStorage.getItem('sys_pwd') || '';
-            document.getElementById('sys-pwd').value = savedPwd;
-            handleSysPwdInput();
+            document.getElementById('sys-pwd').value = localStorage.getItem('sys_pwd') || '';
             document.getElementById('view-login').style.display = 'none';
             document.getElementById('header-bar').style.display = 'flex';
             document.getElementById('main-container').style.display = 'block';
@@ -342,193 +289,140 @@
             const res = await fetch('/stats?action=get_configs');
             configs = await res.json();
             renderSites();
-            document.getElementById('fab-add').style.display = 'flex';
+            loadAllStats();
         }
 
         function renderSites() {
             const list = document.getElementById('site-list');
             list.innerHTML = '';
             for (let site in configs) {
-                const cName = configs[site].configName || site;
-                const card = document.createElement('div');
-                card.className = 'site-card';
-                card.onclick = function() { openEdit(site); };
-                card.innerHTML = `<div><div class="site-domain">${cName}</div><div class="site-alias">UID: ${site}</div></div><div style="color:var(--primary); font-size:24px;">›</div>`;
-                list.appendChild(card);
+                list.innerHTML += `<div class="site-list-item" onclick="openEdit('${site}')"><div class="site-domain">${site}</div><div style="color:var(--text-s);">设置 ›</div></div>`;
             }
-            if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:80px; line-height:1.8;">雷达矩阵空载<br>轻触悬浮核心部署节点</div>';
+            if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-s); padding:40px 0;">暂无部署的网站</div>';
         }
 
-        function buildBarChart(dataObj) {
-            if(!dataObj || Object.keys(dataObj).length === 0) return '<div style="font-size:12px; color:var(--text-l);">静默期 (数据不足)</div>';
+        function renderBarGroup(title, dataObj) {
+            if(!dataObj || Object.keys(dataObj).length === 0) return '';
             let max = 0;
-            for(let k in dataObj) if(dataObj[k] > max) max = dataObj[k];
-            let html = '';
-            for(let k in dataObj) {
-                let pct = (dataObj[k] / max) * 100;
-                html += `<div class="chart-row"><div class="chart-lbl">${k}</div><div class="chart-bar-wrap"><div class="chart-bar" style="width:${pct}%;"></div></div><div class="chart-val">${dataObj[k]}</div></div>`;
-            }
+            const sorted = Object.entries(dataObj).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            sorted.forEach(e => { if(e[1] > max) max = e[1]; });
+            
+            let html = `<div class="card"><div class="card-title">${title} (Top 5)</div><div class="bar-list">`;
+            sorted.forEach(([k, v]) => {
+                const p = (v/max)*100;
+                html += `<div class="bar-row"><div class="bar-header"><span style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:80%;">${k==='/'?'/(首页)':k}</span><span class="bar-val">${v}</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%;"></div></div></div>`;
+            });
+            html += `</div></div>`;
             return html;
         }
 
         async function loadAllStats() {
             const res = await fetch('/stats?action=get_dashboard');
             allStatsData = await res.json();
-            let optionsHtml = '<option value="all">👑 全域数据统合</option>';
-            for (let site in allStatsData.sites) optionsHtml += `<option value="${site}">探测节点: ${site}</option>`;
+            
+            let optionsHtml = '<option value="all">👑 全部网站汇总</option>';
+            for (let site in allStatsData.sites) optionsHtml += `<option value="${site}">${site}</option>`;
             document.getElementById('stat-selector').innerHTML = optionsHtml;
             document.getElementById('stat-selector').value = 'all';
             selectStat('all');
-            
-            let html = '';
-            for (let site in allStatsData.sites) {
-                const s = allStatsData.sites[site];
-                html += `
-                <div class="card" style="padding:20px; margin-bottom:16px;">
-                    <div style="font-weight:600; margin-bottom:16px; color:var(--primary); display:flex; align-items:center; gap:8px;"><span class="indicator"></span>${site}</div>
-                    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-m); padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border);">
-                        <div>总流: <b>${s.pv}</b> / 访客: <b>${s.uv}</b></div>
-                        <div>今日: <b style="color:var(--primary);">${s.dpv}</b></div>
-                    </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                        <div><div style="font-size:11px; color:var(--text-l); margin-bottom:8px;">终端画像</div>${buildBarChart(s.os)}</div>
-                        <div><div style="font-size:11px; color:var(--text-l); margin-bottom:8px;">溯源引流</div>${buildBarChart(s.ref)}</div>
-                    </div>
-                </div>`;
-            }
-            document.getElementById('stat-detail-list').innerHTML = html;
         }
 
         function selectStat(target) {
             const s = target === 'all' ? allStatsData.total : (allStatsData.sites[target] || {pv:0,uv:0,dpv:0,duv:0,online:0});
-            document.getElementById('stat-view-title').innerText = target === 'all' ? '全域雷达探测' : `子节点 [${target}]`;
-            document.getElementById('all-pv').innerText = s.pv;
-            document.getElementById('all-uv').innerText = s.uv;
-            document.getElementById('all-dpv').innerText = s.dpv;
-            document.getElementById('all-duv').innerText = target === 'all' ? '---' : s.online;
+            document.getElementById('d-pv').innerText = s.pv;
+            document.getElementById('d-uv').innerText = s.uv;
+            document.getElementById('d-dpv').innerText = s.dpv || 0;
+            document.getElementById('d-duv').innerText = target === 'all' ? '-' : (s.online || 0);
+
+            let panels = '';
+            if(target !== 'all' && allStatsData.sites[target]) {
+                const sd = allStatsData.sites[target];
+                panels += renderBarGroup('受访页面', sd.path);
+                panels += renderBarGroup('流量来源', sd.ref);
+                panels += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">${renderBarGroup('终端类型', sd.dev)}${renderBarGroup('操作系统', sd.os)}</div>`;
+            } else if (target === 'all') {
+                panels = '<div style="text-align:center; color:var(--text-s); padding:20px;">请在上方选择单个网站查看详细报表</div>';
+            }
+            document.getElementById('stat-detail-panels').innerHTML = panels;
         }
 
         function showAddSiteModal() {
-            openModal('分配探测节点', `<input type="text" id="new-site-input" placeholder="输入全网唯一标识 (如 a.com)" style="margin-top:10px; width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; background:var(--bg); color:#fff;">`, `<button class="btn btn-outline" onclick="closeModal()">取消调配</button><button class="btn btn-primary" onclick="confirmAddSite()">发射探针</button>`);
+            openModal('添加部署', `<input type="text" id="new-site-input" placeholder="输入网站域名或标识">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmAddSite()">确认</button>`);
             setTimeout(() => document.getElementById('new-site-input')?.focus(), 300);
         }
 
         async function confirmAddSite() {
             const site = document.getElementById('new-site-input').value.trim();
-            if (!site || configs[site]) return showToast('标识无效或节点冲突');
+            if (!site || configs[site]) return showToast('无效或已存在');
             closeModal();
-            showToast('环境构建中...');
-            configs[site] = { 
-                configName: site, position: 'bottom-left', brand: '#64ffda',
-                shows: {pv:true, uv:true, online:true, geo:true, dev:true} 
-            };
+            showToast('初始化中...');
+            configs[site] = { mode: 'invisible', theme: 'light' };
             await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
             renderSites();
             openEdit(site);
         }
 
         function openEdit(site) {
-            try {
-                const c = configs[site] || {};
-                document.getElementById('e-site-id').value = site;
-                
-                const shows = c.shows || {pv:true, uv:true, online:true, geo:true, dev:true};
-                document.getElementById('e-t-pv').checked = !!shows.pv;
-                document.getElementById('e-t-uv').checked = !!shows.uv;
-                document.getElementById('e-t-online').checked = !!shows.online;
-                document.getElementById('e-t-geo').checked = !!shows.geo;
-                document.getElementById('e-t-dev').checked = !!shows.dev;
-                
-                document.getElementById('e-pos').value = c.position || 'bottom-left';
-                document.getElementById('e-brand').value = c.brand || '#64ffda';
-                document.getElementById('c-brand-picker').value = c.brand || '#64ffda';
-
-                document.getElementById('sys-title').innerText = c.configName || site;
-                document.getElementById('btn-back').style.display = 'flex';
-                document.getElementById('btn-delete-top').style.display = 'flex';
-                document.getElementById('fab-add').style.display = 'none';
-                document.getElementById('nav-bar').style.display = 'none';
-                document.getElementById('edit-nav-bar').style.display = 'flex';
-                document.getElementById('view-edit').classList.add('show');
-                isEditOpen = true;
-            } catch (e) {
-                showToast('读取配置失败');
-            }
-        }
-
-        function promptSave() {
-            const site = document.getElementById('e-site-id').value;
             const c = configs[site] || {};
-            const cName = c.configName || site;
-            openModal('固化协议', `<div class="label" style="text-align:left; color:#fff;">分配节点代号 (覆盖修改)：</div><input type="text" id="save-config-name" value="${cName}" style="width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; margin-bottom:10px; background:var(--bg); color:#fff;">`, `<button class="btn btn-outline" onclick="closeModal()">终止</button><button class="btn btn-primary" onclick="executeSave()">确认烧录</button>`);
-        }
-
-        async function executeSave() {
-            const configName = document.getElementById('save-config-name').value.trim();
-            if (!configName) return showToast('代号残缺');
-            closeModal();
-            const site = document.getElementById('e-site-id').value;
+            document.getElementById('e-site-id').value = site;
+            document.querySelector(`input[name="e-mode"][value="${c.mode || 'invisible'}"]`).checked = true;
+            document.getElementById('e-theme').value = c.theme || 'light';
             
-            configs[site] = {
-                configName: configName,
-                position: document.getElementById('e-pos').value,
-                brand: document.getElementById('e-brand').value,
-                shows: {
-                    pv: document.getElementById('e-t-pv').checked,
-                    uv: document.getElementById('e-t-uv').checked,
-                    online: document.getElementById('e-t-online').checked,
-                    geo: document.getElementById('e-t-geo').checked,
-                    dev: document.getElementById('e-t-dev').checked
-                }
-            };
-            
-            showToast('云端协议同步中...');
-            await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
-            document.getElementById('sys-title').innerText = configName;
-            renderSites();
-            showToast('协议固化成功');
+            document.getElementById('sys-title').innerText = site;
+            document.getElementById('btn-back').style.display = 'flex';
+            document.getElementById('fab-add').style.display = 'none';
+            document.getElementById('view-edit').classList.add('show');
+            isEditOpen = true;
         }
-
-        function handleBackBtn() { closeEdit(); }
 
         function closeEdit() {
             document.getElementById('view-edit').classList.remove('show');
             document.getElementById('btn-back').style.display = 'none';
-            document.getElementById('btn-delete-top').style.display = 'none';
             document.getElementById('fab-add').style.display = 'flex';
-            document.getElementById('nav-bar').style.display = 'flex';
-            document.getElementById('edit-nav-bar').style.display = 'none';
-            document.getElementById('sys-title').innerText = '流体统计中枢';
+            document.getElementById('sys-title').innerText = '数据大盘';
+            document.querySelector('.nav-item').click(); // 回到首页
             isEditOpen = false;
+        }
+
+        async function saveEdit() {
+            const site = document.getElementById('e-site-id').value;
+            configs[site] = {
+                mode: document.querySelector('input[name="e-mode"]:checked').value,
+                theme: document.getElementById('e-theme').value
+            };
+            showToast('保存中...');
+            await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
+            showToast('配置已更新');
+            closeEdit();
         }
 
         function confirmDeleteFromEdit() {
             const site = document.getElementById('e-site-id').value;
-            openModal('切断节点', `确认永久脱机 <b>${site}</b> ？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;cursor:pointer;"><input type="checkbox" id="del-erase-data" checked> 顺扫全量深层历史数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">撤回指令</button><button class="btn btn-danger" onclick="doDelete('${site}')">切断</button>`);
+            openModal('卸载探针', `确认删除并卸载 <b>${site}</b> 的记录吗？<br><br><label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;"><input type="checkbox" id="del-erase-data" checked> 同时清除其历史流量数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">确认卸载</button>`);
         }
 
         async function doDelete(site) {
             const erase = document.getElementById('del-erase-data').checked;
             closeModal();
-            showToast('执行脱机序列...');
+            showToast('处理中...');
             delete configs[site];
             await fetch('/stats?action=delete_site', { method: 'POST', body: JSON.stringify({site, erase}) });
             renderSites();
             closeEdit();
-            showToast('节点已从网络中抹去');
+            showToast('已安全卸载');
         }
 
         function genLinkFromEdit() {
             const site = document.getElementById('e-site-id').value;
             const code = `<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
-            openModal('探针挂载序列', `<div style="font-size:12px; color:var(--text-l); margin-bottom:8px;">V2 极简灵动岛探针无需额外声明 DOM</div><div class="code-preview" style="color:var(--primary);">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">收起</button><button class="btn btn-primary" onclick="copyCode('${site}')">拷贝流体代码</button>`);
+            openModal('安装探针', `<div style="font-size:13px; color:var(--text-s); margin-bottom:12px;">复制下方代码，粘贴到网页的 <code>&lt;head&gt;</code> 或 <code>&lt;body&gt;</code> 中即可。</div><div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制探针</button>`);
         }
 
         function copyCode(site) {
             const code = `<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
             navigator.clipboard.writeText(code);
             closeModal();
-            showToast('代码已缓存至神经链路');
+            showToast('代码已复制');
         }
 
         bootSys();
