@@ -11,467 +11,128 @@
             --text-m: #4a4a4a;
             --text-l: #9b9b9b;
             --primary: #8da493;
-            --primary-dark: #788f7e;
             --border: #e8e6df;
             --danger: #d9827c;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-m);
-            overflow: hidden;
-            height: 100vh;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text-m); overflow: hidden; height: 100vh; }
         
-        .header {
-            background: var(--card);
-            height: calc(54px + env(safe-area-inset-top));
-            padding-top: env(safe-area-inset-top);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 17px;
-            font-weight: 600;
-            border-bottom: 1px solid var(--border);
-            position: relative;
-            z-index: 20;
-        }
-
-        .header .btn-back {
-            position: absolute;
-            left: 16px;
-            bottom: 0;
-            height: 54px;
-            display: flex;
-            align-items: center;
-            font-size: 15px;
-            color: var(--primary);
-            display: none;
-            cursor: pointer;
-            font-weight: 500;
-        }
+        .header { background: var(--card); height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
+        .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; font-weight: 500; }
         
-        .view-container {
-            position: relative;
-            height: calc(100vh - 54px - env(safe-area-inset-top));
-            overflow: hidden;
-        }
-
-        .view {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding: 20px 20px calc(100px + env(safe-area-inset-bottom)) 20px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-        }
-
-        .view.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .view-container { position: relative; height: calc(100vh - 54px - env(safe-area-inset-top)); overflow: hidden; }
+        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 20px calc(90px + env(safe-area-inset-bottom)) 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .view.active { opacity: 1; pointer-events: auto; }
         
-        #view-edit {
-            transform: translateX(100%);
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            background: var(--bg);
-            z-index: 30;
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        #view-edit.show {
-            transform: translateX(0);
-        }
-
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            border: 1px solid var(--border);
-        }
-
-        .card-header {
-            font-weight: 600;
-            margin-bottom: 16px;
-            font-size: 16px;
-            color: var(--text-m);
-        }
+        #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; }
+        #view-edit.show { transform: translateX(0); }
         
-        .custom-select-wrapper {
-            position: relative;
-            margin-bottom: 16px;
-            user-select: none;
-        }
+        #view-login { z-index: 50; background: var(--bg); display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
-        .custom-select {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 0 16px;
-            height: 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            font-size: 15px;
-            color: var(--text-m);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        }
+        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); }
+        .nav-item { text-align: center; color: var(--text-l); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: 0.2s; }
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; display: block; filter: grayscale(1); opacity: 0.6; }
+        .nav-item.active .nav-icon { filter: grayscale(0); opacity: 1; }
 
-        .custom-select .arrow {
-            transition: transform 0.2s;
-            color: var(--text-l);
-            font-size: 12px;
-        }
+        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid var(--border); }
+        .card-header { font-weight: 600; margin-bottom: 16px; font-size: 16px; color: var(--text-m); }
 
-        .custom-select.open .arrow {
-            transform: rotate(180deg);
-        }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-box { background: var(--bg); padding: 16px 12px; border-radius: 12px; text-align: center; }
+        .stat-label { font-size: 12px; color: var(--text-l); margin-bottom: 8px; }
+        .stat-val { font-size: 22px; font-weight: 700; color: var(--text-m); }
 
-        .dropdown-list {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            width: 100%;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            z-index: 100;
-            max-height: 220px;
-            overflow-y: auto;
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(-10px);
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .site-card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .site-card:active { transform: scale(0.97); }
+        .site-domain { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+        .site-desc { font-size: 13px; color: var(--text-l); }
 
-        .dropdown-list.show {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0);
-        }
+        .fab { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5); z-index: 15; cursor: pointer; display: none; }
+        .fab:active { transform: scale(0.9); }
 
-        .dropdown-item {
-            padding: 16px;
-            border-bottom: 1px solid var(--bg);
-            font-size: 15px;
-            cursor: pointer;
-        }
-
-        .dropdown-item:last-child {
-            border-bottom: none;
-        }
-
-        .dropdown-item:active {
-            background: var(--bg);
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .stat-box {
-            background: var(--bg);
-            padding: 16px 12px;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-l);
-            margin-bottom: 8px;
-        }
-
-        .stat-val {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-m);
-        }
-
-        .site-card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border);
-            transition: transform 0.1s;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-        }
-
-        .site-card:active {
-            transform: scale(0.97);
-        }
-
-        .site-domain {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .site-desc {
-            font-size: 13px;
-            color: var(--text-l);
-        }
-
-        .fab {
-            position: fixed;
-            bottom: calc(30px + env(safe-area-inset-bottom));
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background: var(--primary);
-            border-radius: 28px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 28px;
-            box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5);
-            z-index: 15;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-
-        .fab:active {
-            transform: scale(0.9);
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .label {
-            font-size: 13px;
-            color: var(--text-m);
-            margin-bottom: 10px;
-            font-weight: 500;
-        }
-
-        input[type="text"], select.native-select {
-            width: 100%;
-            background: var(--card);
-            border: 1px solid var(--border);
-            height: 48px;
-            padding: 0 16px;
-            border-radius: 12px;
-            font-size: 15px;
-            color: var(--text-m);
-            outline: none;
-            -webkit-appearance: none;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus, select.native-select:focus {
-            border-color: var(--primary);
-        }
+        .form-group { margin-bottom: 18px; }
+        .label { font-size: 13px; color: var(--text-m); margin-bottom: 10px; font-weight: 500; }
+        input[type="text"], input[type="password"], select.native-select { width: 100%; background: var(--card); border: 1px solid var(--border); height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; color: var(--text-m); outline: none; -webkit-appearance: none; }
+        input:focus, select.native-select:focus { border-color: var(--primary); }
         
-        .toggle-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            background: var(--card);
-            padding: 16px;
-            border-radius: 14px;
-            border: 1px solid var(--border);
-        }
+        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--card); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
+        .toggle-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-m); }
+        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
 
-        .toggle-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            color: var(--text-m);
-        }
+        .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(141, 164, 147, 0.3); }
+        .btn-danger { background: #ffffff; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--text-m); }
+        .btn:active { transform: scale(0.96); }
+        .action-row { display: flex; gap: 12px; margin-top: 16px; }
 
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--primary);
-        }
-
-        .btn {
-            width: 100%;
-            height: 50px;
-            border-radius: 14px;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.1s, background 0.2s;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-            box-shadow: 0 4px 15px rgba(141, 164, 147, 0.3);
-        }
-
-        .btn-danger {
-            background: #ffffff;
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-
-        .btn-outline {
-            background: var(--card);
-            border: 1px solid var(--border);
-            color: var(--text-m);
-        }
-
-        .btn:active {
-            transform: scale(0.96);
-        }
-
-        .action-row {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(3px);
-            -webkit-backdrop-filter: blur(3px);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            padding: 20px;
-        }
-
-        .modal {
-            background: var(--card);
-            width: 100%;
-            max-width: 340px;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .modal.show {
-            transform: scale(1);
-            opacity: 1;
-        }
-
-        .modal-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-
-        .modal-body {
-            font-size: 14px;
-            color: var(--text-m);
-            margin-bottom: 24px;
-            line-height: 1.6;
-        }
-
-        .code-preview {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            padding: 16px;
-            border-radius: 12px;
-            font-family: monospace;
-            font-size: 13px;
-            word-break: break-all;
-            text-align: left;
-            color: var(--text-m);
-            max-height: 120px;
-            overflow-y: auto;
-            margin-bottom: 12px;
-        }
-
-        .code-tip {
-            font-size: 12px;
-            color: var(--text-l);
-            text-align: center;
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal { background: var(--card); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); transform: scale(0.9); opacity: 0; transition: 0.2s; }
+        .modal.show { transform: scale(1); opacity: 1; }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; text-align: center; }
+        .modal-body { font-size: 14px; color: var(--text-m); margin-bottom: 24px; text-align: center; line-height: 1.6; }
         
-        .toast {
-            position: fixed;
-            top: 40%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 14px 28px;
-            border-radius: 14px;
-            font-size: 15px;
-            display: none;
-            z-index: 200;
-            font-weight: 500;
-            white-space: nowrap;
-        }
+        .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; text-align: left; color: var(--text-m); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
+        .code-tip { font-size: 12px; color: var(--text-l); text-align: center; }
+        
+        .toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 14px 28px; border-radius: 14px; font-size: 15px; display: none; z-index: 200; font-weight: 500; white-space: nowrap; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="btn-back" id="btn-back" onclick="closeEdit()">＜ 返回</div>
-        <span id="sys-title">网站统计管理</span>
+    <div class="header" id="header-bar" style="display:none;">
+        <div class="btn-back" id="btn-back" onclick="handleBackBtn()">＜ 返回</div>
+        <span id="sys-title">网站管理</span>
     </div>
 
-    <div class="view-container">
-        <div id="view-main" class="view active">
-            
-            <div class="custom-select-wrapper" onclick="toggleDropdown(event)">
-                <div class="custom-select" id="custom-select">
-                    <span id="select-text">请选择要查看数据的网站</span>
-                    <span class="arrow">▼</span>
-                </div>
-                <div class="dropdown-list" id="dropdown-list">
-                </div>
+    <div id="view-login" class="view">
+        <div class="card" style="width:100%; max-width:340px;">
+            <div class="card-header" style="text-align:center; font-size:20px;">系统登录</div>
+            <div class="form-group"><input type="password" id="login-pwd" placeholder="请输入系统访问密码"></div>
+            <div class="form-group toggle-item" style="justify-content:center;">
+                <input type="checkbox" id="login-rem" checked> <label for="login-rem">记住密码，下次自动登录</label>
             </div>
+            <button class="btn btn-primary" onclick="doLogin()">进入系统</button>
+        </div>
+    </div>
 
-            <div class="card" id="stat-board" style="display:none; padding:20px;">
-                <div class="stat-grid">
-                    <div class="stat-box"><div class="stat-label">总访问量 (PV)</div><div class="stat-val" id="sv-pv">0</div></div>
-                    <div class="stat-box"><div class="stat-label">总访客数 (UV)</div><div class="stat-val" id="sv-uv">0</div></div>
-                    <div class="stat-box"><div class="stat-label">今日访问 (PV)</div><div class="stat-val" id="sv-dpv">0</div></div>
-                    <div class="stat-box"><div class="stat-label">今日访客 (UV)</div><div class="stat-val" id="sv-duv">0</div></div>
-                </div>
-            </div>
-
-            <div class="card-header" style="margin-top: 30px; font-size: 16px;">已添加的网站</div>
+    <div class="view-container" id="main-container" style="display:none;">
+        
+        <div id="tab-site" class="view active">
             <div id="site-list"></div>
-            
-            <div class="fab" onclick="showAddSiteModal()">+</div>
+        </div>
+        <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
+
+        <div id="tab-stat" class="view">
+            <div class="card" style="padding:15px; background:var(--primary); color:white; border:none;">
+                <div style="font-size:16px; font-weight:600; margin-bottom:15px; display:flex; justify-content:space-between;">
+                    <span>全站数据汇总</span><span>👑</span>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问量</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
+                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客数</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
+                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">今日访问</div><div class="stat-val" style="color:white;" id="all-dpv">-</div></div>
+                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">今日访客</div><div class="stat-val" style="color:white;" id="all-duv">-</div></div>
+                </div>
+            </div>
+            <div class="card-header" style="margin-top:20px;">各网站详细明细</div>
+            <div id="stat-detail-list"></div>
+        </div>
+
+        <div id="tab-sys" class="view">
+            <div class="card">
+                <div class="card-header">安全设置</div>
+                <div class="form-group">
+                    <div class="label">修改后台访问密码（留空表示无密码）</div>
+                    <input type="text" id="sys-pwd" placeholder="设置新密码">
+                </div>
+                <button class="btn btn-primary" onclick="saveSysConfig()">保存设置</button>
+            </div>
+            <div class="card">
+                <button class="btn btn-outline" style="color:var(--danger);" onclick="logout()">退出登录</button>
+            </div>
         </div>
 
         <div id="view-edit">
@@ -480,33 +141,49 @@
                 
                 <div class="label">选择显示的模块</div>
                 <div class="toggle-group form-group">
-                    <label class="toggle-item"><input type="checkbox" id="e-t-pv"> 总访问量</label>
-                    <label class="toggle-item"><input type="checkbox" id="e-t-uv"> 总访客数</label>
+                    <label class="toggle-item"><input type="checkbox" id="e-t-pv"> 总访问</label>
+                    <label class="toggle-item"><input type="checkbox" id="e-t-uv"> 总访客</label>
                     <label class="toggle-item"><input type="checkbox" id="e-t-dpv"> 今日访问</label>
                     <label class="toggle-item"><input type="checkbox" id="e-t-duv"> 今日访客</label>
                 </div>
 
                 <div class="form-group">
-                    <div class="label">选择展示风格</div>
+                    <div class="label">对齐与大小</div>
+                    <div style="display:flex; gap:12px;">
+                        <select id="e-align" class="native-select" style="flex:1;">
+                            <option value="left">居左对齐</option>
+                            <option value="center">居中对齐</option>
+                            <option value="right">居右对齐</option>
+                        </select>
+                        <select id="e-size" class="native-select" style="flex:1;">
+                            <option value="1">小号尺寸</option>
+                            <option value="2">中号尺寸</option>
+                            <option value="3">大号尺寸 (默认)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="label">选择主题颜色</div>
                     <select id="e-tpl-select" class="native-select">
-                        <option value="1">样式 1 (燕麦色卡片)</option>
-                        <option value="2">样式 2 (纯白色卡片)</option>
-                        <option value="3">样式 3 (灰绿色卡片)</option>
-                        <option value="4">样式 4 (藕荷色卡片)</option>
-                        <option value="5">样式 5 (灰蓝色卡片)</option>
-                        <option value="6">样式 6 (深色极夜版)</option>
-                        <option value="10">样式 10 (无边框透明版)</option>
+                        <option value="1">模板 1 (燕麦色)</option>
+                        <option value="2">模板 2 (纯白色)</option>
+                        <option value="3">模板 3 (灰绿色)</option>
+                        <option value="4">模板 4 (藕荷色)</option>
+                        <option value="5">模板 5 (灰蓝色)</option>
+                        <option value="6">模板 6 (极夜深黑)</option>
+                        <option value="10">模板 10 (透明无边框)</option>
                     </select>
                 </div>
 
-                <div class="label" style="margin-top: 24px;">自定义页面显示的文字</div>
+                <div class="label" style="margin-top: 24px;">自定义页面文字</div>
                 <div style="display:flex; gap:12px;">
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-pv" placeholder="比如: 总访问"></div>
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-uv" placeholder="比如: 总访客"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-pv" placeholder="总访问"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-uv" placeholder="总访客"></div>
                 </div>
                 <div style="display:flex; gap:12px;">
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-dpv" placeholder="比如: 今日访问"></div>
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-duv" placeholder="比如: 今日访客"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-dpv" placeholder="今日访问"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-duv" placeholder="今日访客"></div>
                 </div>
 
                 <div style="margin-top: 30px;">
@@ -518,6 +195,13 @@
                 </div>
             </div>
         </div>
+
+    </div>
+
+    <div class="nav-bar" id="nav-bar" style="display:none;">
+        <div class="nav-item active" onclick="switchTab('site')"><span class="nav-icon">🌐</span>网站管理</div>
+        <div class="nav-item" onclick="switchTab('stat')"><span class="nav-icon">📊</span>统计数据</div>
+        <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>系统设置</div>
     </div>
 
     <div class="modal-overlay" id="overlay">
@@ -527,12 +211,25 @@
             <div class="action-row" id="md-actions"></div>
         </div>
     </div>
-    
     <div class="toast" id="toast"></div>
 
     <script>
         let configs = {};
+        let isEditOpen = false;
+        let isModalOpen = false;
 
+        const tabTitles = { site: '网站管理', stat: '统计概览', sys: '系统设置' };
+
+        // --- 路由与侧滑逻辑 (History API) ---
+        window.addEventListener('popstate', (e) => {
+            if (isModalOpen) {
+                closeModal(true);
+            } else if (isEditOpen) {
+                closeEdit(true);
+            }
+        });
+
+        // --- UI 组件 ---
         function showToast(msg, ms=1500) {
             const t = document.getElementById('toast');
             t.innerText = msg;
@@ -548,34 +245,99 @@
             const md = document.getElementById('modal');
             ov.style.display = 'flex';
             setTimeout(() => md.classList.add('show'), 10);
+            
+            isModalOpen = true;
+            history.pushState({view: 'modal'}, '');
         }
 
-        function closeModal() {
+        function closeModal(fromPop = false) {
             const md = document.getElementById('modal');
             md.classList.remove('show');
             setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 200);
+            
+            isModalOpen = false;
+            if(!fromPop) history.back();
         }
 
-        function toggleDropdown(e) {
-            e.stopPropagation();
-            const list = document.getElementById('dropdown-list');
-            const select = document.getElementById('custom-select');
-            list.classList.toggle('show');
-            select.classList.toggle('open');
+        // --- 导航与视图 ---
+        function switchTab(tab) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.currentTarget.classList.add('active');
+            document.getElementById('sys-title').innerText = tabTitles[tab];
+            
+            const fab = document.getElementById('fab-add');
+            if (tab === 'site' && !isEditOpen) fab.style.display = 'flex';
+            else fab.style.display = 'none';
+
+            if(tab === 'stat') loadAllStats();
         }
 
-        document.addEventListener('click', () => {
-            document.getElementById('dropdown-list').classList.remove('show');
-            document.getElementById('custom-select').classList.remove('open');
-        });
+        // --- 系统鉴权逻辑 ---
+        async function bootSys() {
+            const res = await fetch('/stats?action=get_sys');
+            const data = await res.json();
+            
+            if (data.has_pwd) {
+                const savedPwd = localStorage.getItem('sys_pwd');
+                if (savedPwd) {
+                    const lRes = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd: savedPwd}) });
+                    const lData = await lRes.json();
+                    if (lData.ok) { return initApp(); }
+                }
+                document.getElementById('view-login').style.display = 'flex';
+            } else {
+                initApp();
+            }
+        }
 
-        async function initLoad() {
+        async function doLogin() {
+            const pwd = document.getElementById('login-pwd').value;
+            const rem = document.getElementById('login-rem').checked;
+            if(!pwd) return showToast('请输入密码');
+            
+            showToast('验证中...', 1000);
+            const res = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd}) });
+            const data = await res.json();
+            
+            if (data.ok) {
+                if (rem) localStorage.setItem('sys_pwd', pwd);
+                initApp();
+            } else {
+                showToast('密码错误');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('sys_pwd');
+            location.reload();
+        }
+
+        async function saveSysConfig() {
+            const pwd = document.getElementById('sys-pwd').value;
+            showToast('正在保存...');
+            await fetch('/stats?action=save_sys', { method: 'POST', body: JSON.stringify({pwd}) });
+            if(pwd) localStorage.setItem('sys_pwd', pwd);
+            else localStorage.removeItem('sys_pwd');
+            showToast('设置已保存');
+        }
+
+        // --- 核心业务初始化 ---
+        async function initApp() {
+            document.getElementById('view-login').style.display = 'none';
+            document.getElementById('header-bar').style.display = 'flex';
+            document.getElementById('main-container').style.display = 'block';
+            document.getElementById('nav-bar').style.display = 'flex';
+            
             const list = document.getElementById('site-list');
-            list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:30px;">正在获取数据...</div>';
+            list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:30px;">拉取配置中...</div>';
+            
             const res = await fetch('/stats?action=get_configs');
             configs = await res.json();
+            
             renderSites();
-            renderDropdown();
+            document.getElementById('fab-add').style.display = 'flex';
         }
 
         function renderSites() {
@@ -585,80 +347,69 @@
                 list.innerHTML += `
                 <div class="site-card" onclick="openEdit('${site}')">
                     <div>
-                        <div class="site-domain">网站名称: ${site}</div>
-                        <div class="site-desc">点击修改设置或获取代码</div>
+                        <div class="site-domain">${site}</div>
+                        <div class="site-desc">点击配置卡片排版</div>
                     </div>
                     <div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>
                 </div>`;
             }
             if (Object.keys(configs).length === 0) {
-                list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">还没有添加网站<br>点击右下角 + 号添加</div>';
+                list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">您还没有添加过网站<br>点击右下角按钮添加</div>';
             }
         }
 
-        function renderDropdown() {
-            const dropList = document.getElementById('dropdown-list');
-            dropList.innerHTML = '';
-            if (Object.keys(configs).length === 0) {
-                dropList.innerHTML = '<div class="dropdown-item" style="color:var(--text-l);">暂无网站数据</div>';
-                return;
-            }
-            for (let site in configs) {
-                dropList.innerHTML += `<div class="dropdown-item" onclick="selectStatSite('${site}')">${site}</div>`;
-            }
-        }
-
-        async function selectStatSite(site) {
-            document.getElementById('select-text').innerText = `当前查看: ${site}`;
-            document.getElementById('stat-board').style.display = 'block';
-            
-            document.getElementById('sv-pv').innerText = '-';
-            document.getElementById('sv-uv').innerText = '-';
-            document.getElementById('sv-dpv').innerText = '-';
-            document.getElementById('sv-duv').innerText = '-';
-
-            const res = await fetch(`/stats?action=get_stats&site=${site}`);
+        async function loadAllStats() {
+            document.getElementById('stat-detail-list').innerHTML = '<div style="text-align:center; color:var(--text-l);">数据加载中...</div>';
+            const res = await fetch('/stats?action=get_all_stats');
             const data = await res.json();
-            document.getElementById('sv-pv').innerText = data.pv;
-            document.getElementById('sv-uv').innerText = data.uv;
-            document.getElementById('sv-dpv').innerText = data.dpv;
-            document.getElementById('sv-duv').innerText = data.duv;
+            
+            document.getElementById('all-pv').innerText = data.total.pv;
+            document.getElementById('all-uv').innerText = data.total.uv;
+            document.getElementById('all-dpv').innerText = data.total.dpv;
+            document.getElementById('all-duv').innerText = data.total.duv;
+            
+            let html = '';
+            for (let site in data.sites) {
+                const s = data.sites[site];
+                html += `
+                <div class="card" style="padding:15px;">
+                    <div style="font-weight:600; margin-bottom:10px;">${site}</div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-m); border-bottom:1px solid var(--bg); padding-bottom:6px; margin-bottom:6px;">
+                        <div>总访问: <b>${s.pv}</b></div><div>总访客: <b>${s.uv}</b></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--primary);">
+                        <div>今日访问: <b>${s.dpv}</b></div><div>今日访客: <b>${s.duv}</b></div>
+                    </div>
+                </div>`;
+            }
+            if(Object.keys(data.sites).length === 0) html = '<div style="text-align:center; color:var(--text-l);">暂无数据</div>';
+            document.getElementById('stat-detail-list').innerHTML = html;
         }
 
         function showAddSiteModal() {
             openModal('添加新网站',
-                `<input type="text" id="new-site-input" placeholder="输入网站名称（如：我的博客）" style="margin-top:10px;">`,
+                `<input type="text" id="new-site-input" placeholder="输入网站名称（如：blog）" style="margin-top:10px;">`,
                 `<button class="btn btn-outline" onclick="closeModal()">取消</button>
                  <button class="btn btn-primary" onclick="confirmAddSite()">确认添加</button>`
             );
-            setTimeout(() => {
-                const input = document.getElementById('new-site-input');
-                if(input) input.focus();
-            }, 300);
+            setTimeout(() => document.getElementById('new-site-input')?.focus(), 300);
         }
 
         async function confirmAddSite() {
             const input = document.getElementById('new-site-input');
             const site = input.value.trim();
-            if (!site) {
-                showToast('网站名称不能为空');
-                return;
-            }
-            if (configs[site]) {
-                showToast('这个名称已经存在了');
-                return;
-            }
+            if (!site) return showToast('名称不能为空');
+            if (configs[site]) return showToast('此名称已存在');
 
             closeModal();
-            showToast('正在添加...');
+            showToast('添加中...');
             
-            configs[site] = { tpl: 1, pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} };
+            configs[site] = { tpl: 1, size: 3, align: 'center', pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} };
             await fetch('/stats?action=save_config', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({site: site, ...configs[site]})
+                method: 'POST', body: JSON.stringify({site: site, ...configs[site]})
             });
             
             renderSites();
-            renderDropdown();
             openEdit(site);
         }
 
@@ -671,28 +422,46 @@
             document.getElementById('e-t-dpv').checked = c.shows.dpv;
             document.getElementById('e-t-duv').checked = c.shows.duv;
             
+            document.getElementById('e-align').value = c.align || 'center';
+            document.getElementById('e-size').value = c.size || 3;
+            document.getElementById('e-tpl-select').value = c.tpl || 1;
+
             document.getElementById('e-v-pv').value = c.pv;
             document.getElementById('e-v-uv').value = c.uv;
             document.getElementById('e-v-dpv').value = c.dpv;
             document.getElementById('e-v-duv').value = c.duv;
-            
-            document.getElementById('e-tpl-select').value = c.tpl || 1;
 
             document.getElementById('sys-title').innerText = `设置: ${site}`;
             document.getElementById('btn-back').style.display = 'flex';
+            document.getElementById('fab-add').style.display = 'none';
             document.getElementById('view-edit').classList.add('show');
+            
+            isEditOpen = true;
+            history.pushState({view: 'edit'}, '');
         }
 
-        function closeEdit() {
+        function handleBackBtn() {
+            if (isEditOpen) {
+                history.back(); // Trigger popstate
+            }
+        }
+
+        function closeEdit(fromPop = false) {
             document.getElementById('view-edit').classList.remove('show');
             document.getElementById('btn-back').style.display = 'none';
-            document.getElementById('sys-title').innerText = '网站统计管理';
+            document.getElementById('sys-title').innerText = '网站管理';
+            document.getElementById('fab-add').style.display = 'flex';
+            
+            isEditOpen = false;
+            if(!fromPop) history.back();
         }
 
         async function saveEdit() {
             const site = document.getElementById('e-site-id').value;
             configs[site] = {
                 tpl: document.getElementById('e-tpl-select').value,
+                size: parseInt(document.getElementById('e-size').value),
+                align: document.getElementById('e-align').value,
                 pv: document.getElementById('e-v-pv').value,
                 uv: document.getElementById('e-v-uv').value,
                 dpv: document.getElementById('e-v-dpv').value,
@@ -705,19 +474,19 @@
                 }
             };
             
-            showToast('正在保存...');
+            showToast('保存中...');
             await fetch('/stats?action=save_config', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({site: site, ...configs[site]})
+                method: 'POST', body: JSON.stringify({site: site, ...configs[site]})
             });
             
-            showToast('设置已保存');
+            showToast('保存成功');
             closeEdit();
         }
 
         function confirmDeleteFromEdit() {
             const site = document.getElementById('e-site-id').value;
             openModal('确认删除', 
-            `确定要删除 <b>${site}</b> 吗？<br><br>删除后，安装在这个网站上的代码将立刻失效，并且无法恢复。`, 
+            `确定要删除 <b>${site}</b> 吗？<br><br>删除后不可恢复，原有的代码也将失效。`, 
             `<button class="btn btn-outline" onclick="closeModal()">取消</button>
              <button class="btn btn-danger" onclick="doDelete('${site}')">确认删除</button>`);
         }
@@ -728,26 +497,19 @@
             delete configs[site];
             await fetch('/stats?action=delete_site', { method: 'POST', body: JSON.stringify({site})});
             renderSites();
-            renderDropdown();
-            
-            if(document.getElementById('select-text').innerText.includes(site)) {
-                document.getElementById('select-text').innerText = '请选择要查看数据的网站';
-                document.getElementById('stat-board').style.display = 'none';
-            }
-            
             closeEdit();
-            showToast('已成功删除');
+            showToast('已删除');
         }
 
         function genLinkFromEdit() {
             const site = document.getElementById('e-site-id').value;
-            showToast('正在获取代码...', 800);
+            showToast('正在生成...', 800);
             setTimeout(() => {
                 const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
                 const escCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                openModal('网站统计代码', 
+                openModal('专属统计代码', 
                 `<div class="code-preview">${escCode}</div>
-                 <div class="code-tip">请点击下方按钮复制，并粘贴到你网站 HTML 的 &lt;body&gt; 内部</div>`,
+                 <div class="code-tip">复制上方代码并粘贴到网站 HTML 内部</div>`,
                 `<button class="btn btn-outline" onclick="closeModal()">关闭</button>
                  <button class="btn btn-primary" onclick="copyCode('${site}')">复制完整代码</button>`);
             }, 800);
@@ -757,11 +519,10 @@
             const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
             navigator.clipboard.writeText(code);
             closeModal();
-            closeEdit();
-            setTimeout(() => showToast('复制成功！快去粘贴吧'), 400);
+            showToast('复制成功！');
         }
 
-        initLoad();
+        bootSys();
     </script>
 </body>
 </html>
