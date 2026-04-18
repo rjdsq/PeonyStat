@@ -1,431 +1,277 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Analytics Dashboard</title>
-    <style>
-        :root {
-            --bg: #f9fafb; --card: #ffffff; --text-p: #111827; --text-s: #6b7280;
-            --primary: #2563eb; --border: #e5e7eb; --danger: #ef4444;
-            --radius: 16px;
+export async function onRequest(context) {
+    const { request, env, waitUntil } = context;
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
+    const site = url.searchParams.get('site') || '1';
+
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+    if (action === 'get_sys') {
+        const pwd = await env.stat.get('sys_pwd');
+        return new Response(JSON.stringify({ has_pwd: !!pwd }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'login' && request.method === 'POST') {
+        let data = {};
+        try { data = await request.json(); } catch(e) {}
+        const pwd = await env.stat.get('sys_pwd');
+        return new Response(JSON.stringify({ ok: data.pwd === pwd }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'save_sys' && request.method === 'POST') {
+        let data = {};
+        try { data = await request.json(); } catch(e) {}
+        if (data.pwd) await env.stat.put('sys_pwd', data.pwd);
+        else await env.stat.delete('sys_pwd');
+        return new Response(JSON.stringify({ ok: true }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    const k_config = "all_sites_config";
+    let configStr = await env.stat.get(k_config);
+    let allConfigs = configStr ? JSON.parse(configStr) : {};
+
+    if (action === 'clear_all' && request.method === 'POST') {
+        const listed = await env.stat.list();
+        const tasks = listed.keys.map(k => env.stat.delete(k.name));
+        await Promise.all(tasks);
+        return new Response(JSON.stringify({ status: "ok" }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'get_configs') {
+        return new Response(JSON.stringify(allConfigs), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'save_config' && request.method === 'POST') {
+        let newConf = {};
+        try { newConf = await request.json(); } catch(e) {}
+        if (newConf.site) {
+            allConfigs[newConf.site] = newConf;
+            await env.stat.put(k_config, JSON.stringify(allConfigs));
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: var(--text-p); overflow: hidden; height: 100vh; }
+        return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'delete_site' && request.method === 'POST') {
+        let data = {};
+        try { data = await request.json(); } catch(e) {}
+        if (data.site && allConfigs[data.site]) {
+            delete allConfigs[data.site];
+            const tasks = [env.stat.put(k_config, JSON.stringify(allConfigs))];
+            if (data.erase) {
+                const listed = await env.stat.list({ prefix: `s_${data.site}_` });
+                listed.keys.forEach(k => tasks.push(env.stat.delete(k.name)));
+            }
+            await Promise.all(tasks);
+        }
+        return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'script') {
+        const conf = allConfigs[site] || { 
+            mode: 'card', tpl: 1, scale: 1, align: 'center', layout: 'row', position: 'bottom-right',
+            useCustom: false, colors: { box: 'transparent', item: '#f9f7f2', lbl: '#a5acaa', val: '#788583' },
+            order: ['pv', 'uv', 'dpv', 'duv'],
+            names: { pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', online: '当前在线', geo: '地域探测' },
+            shows: {pv:true, uv:true, dpv:true, duv:true, online:false, geo:false} 
+        };
         
-        .header { background: var(--card); height: calc(56px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
-        .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 56px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; }
-        
-        .view-container { position: relative; height: calc(100vh - 56px - env(safe-area-inset-top)); overflow: hidden; }
-        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(100px + env(safe-area-inset-bottom)) 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-        .view.active { opacity: 1; pointer-events: auto; }
-        
-        #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; padding: 0; }
-        #view-edit.show { transform: translateX(0); }
-        .edit-scroll-box { padding: 16px 16px 120px 16px; }
-        
-        #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
+        const templates = {
+            1: { box: 'transparent', bg: '#f9f7f2', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' },
+            2: { box: 'transparent', bg: '#ffffff', border: '#f4f1eb', val: '#5c5c5c', lbl: '#a0b5a6' },
+            3: { box: 'transparent', bg: '#eef0ed', border: '#eef0ed', val: '#8da493', lbl: '#788583' },
+            4: { box: 'transparent', bg: '#f5f0ef', border: '#ece5e3', val: '#bca39f', lbl: '#a5acaa' },
+            5: { box: 'transparent', bg: '#f2f5f6', border: '#e8edf0', val: '#7f93a1', lbl: '#a5acaa' },
+            6: { box: 'transparent', bg: '#fafafa', border: '#333333', val: '#333333', lbl: '#666666' },
+            7: { box: 'transparent', bg: '#333333', border: '#333333', val: '#f9f7f2', lbl: '#a5acaa' },
+            8: { box: 'transparent', bg: '#f9f9f9', border: '#d0b8b4', val: '#d0b8b4', lbl: '#a5acaa' },
+            9: { box: 'transparent', bg: '#ffffff', border: '#a0b5a6', val: '#a0b5a6', lbl: '#a5acaa' },
+            10: { box: 'transparent', bg: 'transparent', border: 'transparent', val: '#788583', lbl: '#a5acaa' },
+            11: { box: 'transparent', bg: '#121212', border: '#00ffcc', val: '#00ffcc', lbl: '#009999' },
+            12: { box: 'transparent', bg: '#000000', border: '#39ff14', val: '#39ff14', lbl: '#228b22' },
+            13: { box: 'transparent', bg: '#f4ece6', border: '#e2d3c8', val: '#5c4033', lbl: '#8b7355' },
+            14: { box: 'transparent', bg: '#0a192f', border: '#172a45', val: '#64ffda', lbl: '#8892b0' },
+            15: { box: 'transparent', bg: '#fff0e6', border: '#ffdcb3', val: '#ff7f50', lbl: '#ff9966' },
+            16: { box: 'transparent', bg: '#1b2a22', border: '#253e30', val: '#a8d5ba', lbl: '#7eb08c' },
+            17: { box: 'transparent', bg: '#fff0f5', border: '#ffb6c1', val: '#ff69b4', lbl: '#ffc0cb' },
+            18: { box: 'transparent', bg: '#f8f8ff', border: '#e6e6fa', val: '#9370db', lbl: '#b0c4de' },
+            19: { box: 'transparent', bg: '#fff5ee', border: '#ffdab9', val: '#ff4500', lbl: '#ffa07a' },
+            20: { box: 'transparent', bg: '#ffffff', border: '#000000', val: '#000000', lbl: '#000000' }
+        };
 
-        .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; }
-        .nav-item { text-align: center; color: var(--text-s); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: color 0.2s; font-weight: 500; }
-        .nav-item.active { color: var(--primary); font-weight: 600; }
-        .nav-icon { font-size: 20px; margin-bottom: 4px; display: block; opacity: 0.7; }
-        .nav-item.active .nav-icon { opacity: 1; }
+        const trackerJs = `
+        (async function() {
+            let reqData = { url: window.location.href, ref: document.referrer, sw: window.screen.width };
+            let resData = { pv:0, uv:0, dpv:0, duv:0, online:1, geo:'未知' };
+            try {
+                const response = await fetch('${url.origin}/stats?action=track&site=${site}', {
+                    method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(reqData)
+                });
+                resData = await response.json();
+            } catch(e) {}
 
-        .card { background: var(--card); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        .card-title { font-weight: 600; font-size: 15px; color: var(--text-p); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .stat-box { background: var(--bg); padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
-        .stat-label { font-size: 12px; color: var(--text-s); margin-bottom: 8px; }
-        .stat-val { font-size: 24px; font-weight: 700; color: var(--text-p); letter-spacing: -0.5px; }
+            const mode = '${conf.mode || 'card'}';
+            if (mode === 'invisible') return;
 
-        .site-list-item { background: var(--card); border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; transition: 0.1s; }
-        .site-list-item:active { transform: scale(0.98); background: var(--bg); }
-        .site-domain { font-size: 15px; font-weight: 600; }
-        
-        .fab { position: fixed; bottom: calc(100px + env(safe-area-inset-bottom)); right: 20px; width: 50px; height: 50px; background: var(--text-p); border-radius: 25px; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 15; cursor: pointer; display: none; }
-        .fab:active { transform: scale(0.9); }
+            const c = document.getElementById('cf-stat');
+            if (mode === 'badge') {
+                if(!c) return;
+                c.innerHTML = \`<div style="display:inline-flex; align-items:center; gap:8px; background:#ffffff; border:1px solid #eaeaea; padding:6px 12px; border-radius:20px; font-family:system-ui,-apple-system,sans-serif; font-size:12px; color:#333; box-shadow:0 2px 8px rgba(0,0,0,0.04);"><span style="display:inline-block; width:6px; height:6px; background:#10b981; border-radius:50%; box-shadow:0 0 6px #10b981;"></span>在线 \${resData.online} <span style="color:#888; margin:0 4px;">|</span> 累计 \${resData.pv}</div>\`;
+                return;
+            }
 
-        .form-group { margin-bottom: 16px; }
-        .label { font-size: 13px; color: var(--text-s); margin-bottom: 8px; font-weight: 500; }
-        input[type="text"], input[type="password"], select { width: 100%; background: var(--bg); border: 1px solid var(--border); height: 44px; padding: 0 16px; border-radius: 10px; font-size: 14px; color: var(--text-p); outline: none; -webkit-appearance: none; }
-        input:focus, select:focus { border-color: var(--primary); background: var(--card); }
-        
-        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .toggle-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-p); padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); }
-        input[type="radio"] { width: 18px; height: 18px; accent-color: var(--primary); }
+            const shows = ${JSON.stringify(conf.shows || {pv:true, uv:true, dpv:true, duv:true})};
+            const names = ${JSON.stringify(conf.names || {pv:'总访问', uv:'总访客', dpv:'今日访问', duv:'今日访客', online:'实时在线', geo:'地区'})};
+            const order = ${JSON.stringify(conf.order || ['pv','uv','dpv','duv','online','geo'])};
 
-        .btn { width: 100%; height: 46px; border-radius: 10px; border: none; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.1s; }
-        .btn-primary { background: var(--text-p); color: white; }
-        .btn-danger { background: #fee2e2; color: var(--danger); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-p); }
-        .btn:active { transform: scale(0.97); }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
-        .modal { background: var(--card); width: 100%; max-width: 320px; border-radius: 16px; padding: 24px; opacity: 0; transform: scale(0.95); transition: 0.2s; }
-        .modal.show { opacity: 1; transform: scale(1); }
-        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; text-align: center; }
-        .modal-body { font-size: 14px; color: var(--text-s); margin-bottom: 24px; text-align: center; line-height: 1.5; }
-        
-        .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; word-break: break-all; color: var(--text-p); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
-        
-        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(17,24,39,0.9); color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; display: none; z-index: 200; font-weight: 500; }
-        
-        /* 报表图表条 */
-        .bar-list { display: flex; flex-direction: column; gap: 12px; }
-        .bar-row { display: flex; flex-direction: column; gap: 4px; }
-        .bar-header { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-p); }
-        .bar-track { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--primary); border-radius: 3px; }
-        .bar-val { color: var(--text-s); font-size: 12px; }
-    </style>
-</head>
-<body>
-
-    <div class="header" id="header-bar" style="display:none;">
-        <div class="btn-back" id="btn-back" onclick="closeEdit()">＜ 返回</div>
-        <span id="sys-title">数据大盘</span>
-    </div>
-
-    <div id="view-login" class="view">
-        <div class="card" style="width:100%; max-width:320px; border:none; box-shadow:none; background:transparent;">
-            <div style="text-align:center; font-size:24px; font-weight:700; margin-bottom:30px; color:var(--text-p);">Analytics</div>
-            <div class="form-group"><input type="password" id="login-pwd" placeholder="输入访问密钥"></div>
-            <button class="btn btn-primary" onclick="doLogin()">进入系统</button>
-        </div>
-    </div>
-
-    <div class="view-container" id="main-container" style="display:none;">
-        
-        <div id="tab-stat" class="view active">
-            <div class="form-group">
-                <select id="stat-selector" onchange="selectStat(this.value)"></select>
-            </div>
-            
-            <div class="card">
-                <div class="card-title" id="stat-view-title">核心指标</div>
-                <div class="stat-grid">
-                    <div class="stat-box"><div class="stat-label">总浏览量</div><div class="stat-val" id="d-pv">-</div></div>
-                    <div class="stat-box"><div class="stat-label">独立访客</div><div class="stat-val" id="d-uv">-</div></div>
-                    <div class="stat-box"><div class="stat-label">今日浏览</div><div class="stat-val" id="d-dpv">-</div></div>
-                    <div class="stat-box" style="border-color:var(--primary); background:rgba(37,99,235,0.05);"><div class="stat-label" style="color:var(--primary);">实时在线</div><div class="stat-val" style="color:var(--primary);" id="d-duv">-</div></div>
-                </div>
-            </div>
-
-            <div id="stat-detail-panels"></div>
-        </div>
-
-        <div id="tab-site" class="view">
-            <div id="site-list"></div>
-            <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
-        </div>
-
-        <div id="tab-sys" class="view">
-            <div class="card">
-                <div class="card-title">系统与安全</div>
-                <div class="form-group">
-                    <div class="label">访问密码 (留空取消验证)</div>
-                    <input type="text" id="sys-pwd" placeholder="设置新密码">
-                </div>
-                <button class="btn btn-primary" style="margin-bottom:12px;" onclick="saveSysConfig()">保存设置</button>
-                <button class="btn btn-outline" id="sec-logout" style="display:none;" onclick="logout()">退出当前会话</button>
-            </div>
-            <div class="card">
-                <div class="card-title" style="color:var(--danger);">危险操作</div>
-                <p style="font-size:13px; color:var(--text-s); margin-bottom:16px;">永久清除所有站点的统计数据及配置。</p>
-                <button class="btn btn-danger" onclick="confirmClearAll()">清空所有数据</button>
-            </div>
-        </div>
-
-        <div id="view-edit" class="view">
-            <div class="edit-scroll-box">
-                <input type="hidden" id="e-site-id">
+            if (mode === 'island') {
+                const posStyle = '${conf.position}' === 'bottom-left' ? 'bottom:20px; left:20px;' : 'bottom:20px; right:20px;';
+                const wrap = document.createElement('div');
+                wrap.innerHTML = \`<style>
+                #cf-island { position:fixed; \${posStyle} z-index:2147483647; font-family:-apple-system,sans-serif; display:flex; flex-direction:column; align-items:flex-start; background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(0,0,0,0.08); border-radius:24px; padding:10px 14px; box-shadow:0 10px 30px rgba(0,0,0,0.08); color:#333; overflow:hidden; transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275); cursor:pointer; min-width:80px; height:44px; box-sizing:border-box;}
+                #cf-island:hover { height:auto; padding:16px; border-radius:20px; }
+                .cf-i-hd { display:flex; align-items:center; gap:8px; white-space:nowrap; font-size:14px; font-weight:600; height:24px; width:100%; }
+                .cf-i-dot { width:8px; height:8px; background:#10b981; border-radius:50%; box-shadow:0 0 8px #10b981; }
+                .cf-i-bd { display:flex; flex-direction:column; gap:12px; margin-top:16px; opacity:0; transition:opacity 0.3s; width:100%; min-width:160px; }
+                #cf-island:hover .cf-i-bd { opacity:1; }
+                .cf-i-row { display:flex; justify-content:space-between; font-size:13px; border-bottom:1px dashed rgba(0,0,0,0.05); padding-bottom:6px; }
+                @media (prefers-color-scheme: dark) { #cf-island { background:rgba(30,30,30,0.85); border-color:rgba(255,255,255,0.1); color:#eee; } .cf-i-row { border-color:rgba(255,255,255,0.08); } }
+                </style>
+                <div id="cf-island"><div class="cf-i-hd"><div class="cf-i-dot"></div>数据罗盘</div><div class="cf-i-bd" id="cf-i-content"></div></div>\`;
                 
-                <div class="card">
-                    <div class="card-title">探针形态</div>
-                    <p style="font-size:13px; color:var(--text-s); margin-bottom:16px; line-height:1.5;">专业统计默认隐形静默运行，不干扰网页设计。若需在网页公开展示数据，可开启状态徽章。</p>
-                    
-                    <div class="form-group toggle-group">
-                        <label class="toggle-item"><input type="radio" name="e-mode" value="invisible" checked> 隐形静默运行</label>
-                        <label class="toggle-item"><input type="radio" name="e-mode" value="badge"> 极简状态徽章</label>
-                    </div>
+                let bHtml = '';
+                for(let k of order) { if(shows[k]) bHtml += \`<div class="cf-i-row"><span style="color:#888;">\${names[k]}</span><span style="font-weight:600;">\${resData[k]}</span></div>\`; }
+                document.body.appendChild(wrap);
+                document.getElementById('cf-i-content').innerHTML = bHtml;
+                return;
+            }
 
-                    <div class="form-group" id="badge-theme-sec">
-                        <div class="label">徽章明暗主题</div>
-                        <select id="e-theme">
-                            <option value="light">浅色模式 (Light)</option>
-                            <option value="dark">深色模式 (Dark)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-title">部署与卸载</div>
-                    <div style="display:flex; gap:12px;">
-                        <button class="btn btn-primary" style="flex:2;" onclick="saveEdit()">保存修改</button>
-                        <button class="btn btn-outline" style="flex:1;" onclick="genLinkFromEdit()">代码</button>
-                    </div>
-                    <button class="btn btn-danger" style="margin-top:12px;" onclick="confirmDeleteFromEdit()">彻底删除该网站</button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="nav-bar" id="nav-bar" style="display:none;">
-        <div class="nav-item active" onclick="switchTab('stat')"><span class="nav-icon">📊</span>数据大盘</div>
-        <div class="nav-item" onclick="switchTab('site')"><span class="nav-icon">🌐</span>网站管理</div>
-        <div class="nav-item" onclick="switchTab('sys')"><span class="nav-icon">⚙️</span>系统设置</div>
-    </div>
-
-    <div class="modal-overlay" id="overlay">
-        <div class="modal" id="modal">
-            <div class="modal-title" id="md-title"></div>
-            <div class="modal-body" id="md-body"></div>
-            <div style="display:flex; gap:12px;" id="md-actions"></div>
-        </div>
-    </div>
-    <div class="toast" id="toast"></div>
-
-    <script>
-        let configs = {};
-        let allStatsData = null; 
-        let isEditOpen = false;
-
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 2000);
-        }
-
-        function openModal(title, bodyHtml, actionsHtml) {
-            document.getElementById('md-title').innerText = title;
-            document.getElementById('md-body').innerHTML = bodyHtml;
-            document.getElementById('md-actions').innerHTML = actionsHtml;
-            document.getElementById('overlay').style.display = 'flex';
-            setTimeout(() => document.getElementById('modal').classList.add('show'), 10);
-        }
-
-        function closeModal() {
-            document.getElementById('modal').classList.remove('show');
-            setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 200);
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-            event.currentTarget.classList.add('active');
-            
-            document.getElementById('fab-add').style.display = (tab === 'site' && !isEditOpen) ? 'flex' : 'none';
-            document.getElementById('sys-title').innerText = tab === 'stat' ? '数据大盘' : (tab === 'site' ? '网站管理' : '系统设置');
-            
-            if(tab === 'stat') loadAllStats();
-        }
-
-        async function bootSys() {
-            const res = await fetch('/stats?action=get_sys');
-            const data = await res.json();
-            
-            if (data.has_pwd) {
-                document.getElementById('sec-logout').style.display = 'block';
-                const savedPwd = localStorage.getItem('sys_pwd');
-                if (savedPwd) {
-                    const lRes = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd: savedPwd}) });
-                    const lData = await lRes.json();
-                    if (lData.ok) return initApp();
+            if (mode === 'card') {
+                if(!c) return;
+                const cust = ${conf.useCustom || false};
+                const tc = ${JSON.stringify(conf.colors || {})};
+                const tp = ${JSON.stringify(templates)};
+                const t = cust ? { box: tc.box, bg: tc.item, border: 'transparent', val: tc.val, lbl: tc.lbl } : (tp[${conf.tpl || 1}] || tp[1]);
+                
+                const scale = ${conf.scale || 1};
+                const baseSize = 14 * scale;
+                const isGrid = '${conf.layout}' === 'grid';
+                const flexWrap = isGrid ? 'wrap' : 'nowrap';
+                const itemFlex = isGrid ? '0 0 calc(50% - 4px)' : '0 0 auto';
+                const jc = '${conf.align}' === 'left' ? 'flex-start' : ('${conf.align}' === 'right' ? 'flex-end' : 'center');
+                
+                let items = [];
+                for(let k of order) {
+                    if(shows[k]) items.push(\`<div style="flex:\${itemFlex}; min-width:50px; background:\${t.bg}; padding:0.6em 0.8em; border-radius:0.6em; border:1px solid \${t.border}; box-sizing:border-box; text-align:center;"><div style="font-size:0.75em; color:\${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${names[k]}</div><div style="font-size:1.15em; color:\${t.val}; font-weight:600;">\${resData[k]}</div></div>\`);
                 }
-                document.getElementById('view-login').style.display = 'flex';
-            } else {
-                initApp();
+                const paddingBox = t.box !== 'transparent' ? 'padding:0.6em; border-radius:0.8em;' : '';
+                c.innerHTML = \`<div style="display:flex; justify-content:\${jc}; width:100%;"><div style="display:flex; flex-wrap:\${flexWrap}; gap:8px; justify-content:center; background:\${t.box}; \${paddingBox} font-family:-apple-system,sans-serif; font-size:\${baseSize}px; line-height:1; width:max-content; max-width:100%; box-sizing:border-box;">\${items.join('')}</div></div>\`;
             }
+        })();`;
+        return new Response(trackerJs, { headers: { "Content-Type": "application/javascript", ...corsHeaders } });
+    }
+
+    const dateStr = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }).split(' ')[0];
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+
+    if (action === 'track' && request.method === 'POST') {
+        let reqData = { url: '', ref: '', sw: 1024 };
+        try { reqData = await request.json(); } catch(e) {}
+
+        const ua = request.headers.get('user-agent') || '';
+        let os = '未知';
+        if (/windows/i.test(ua)) os = 'Windows';
+        else if (/macintosh|mac os x/i.test(ua)) os = 'macOS';
+        else if (/android/i.test(ua)) os = 'Android';
+        else if (/iphone|ipad/i.test(ua)) os = 'iOS';
+        else if (/linux/i.test(ua)) os = 'Linux';
+
+        let browser = '未知';
+        if (/micromessenger/i.test(ua)) browser = 'WeChat';
+        else if (/edg/i.test(ua)) browser = 'Edge';
+        else if (/chrome|crios/i.test(ua)) browser = 'Chrome';
+        else if (/safari/i.test(ua)) browser = 'Safari';
+        else if (/firefox|fxios/i.test(ua)) browser = 'Firefox';
+
+        const dev = (reqData.sw < 768 || /mobile/i.test(ua)) ? 'Mobile' : 'Desktop';
+        const geo = request.cf && request.cf.country ? request.cf.country : '未知';
+        
+        let path = '/';
+        try { path = new URL(reqData.url).pathname; } catch(e) {}
+        
+        let refDomain = '直接访问';
+        if (reqData.ref) {
+            try { 
+                const rUrl = new URL(reqData.ref);
+                if (rUrl.hostname !== new URL(reqData.url || 'http://a.com').hostname) refDomain = rUrl.hostname;
+            } catch(e) {}
         }
 
-        async function doLogin() {
-            const pwd = document.getElementById('login-pwd').value;
-            if(!pwd) return showToast('请输入密码');
-            const res = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd}) });
-            const data = await res.json();
-            if (data.ok) {
-                localStorage.setItem('sys_pwd', pwd);
-                initApp();
-            } else {
-                showToast('密码错误');
-            }
+        const k_daily = `s_${site}_d_${dateStr}`;
+        const k_total = `s_${site}_t`;
+        const k_online = `s_${site}_p_${ip}`;
+
+        let [dailyStr, totalStr] = await Promise.all([ env.stat.get(k_daily), env.stat.get(k_total) ]);
+
+        let daily = dailyStr ? JSON.parse(dailyStr) : { pv:0, uv:0, ips:[], os:{}, br:{}, dev:{}, geo:{}, path:{}, ref:{} };
+        let total = totalStr ? JSON.parse(totalStr) : { pv:0, uv:0, ips:[] };
+
+        daily.pv++;
+        total.pv++;
+        daily.path[path] = (daily.path[path] || 0) + 1;
+        daily.ref[refDomain] = (daily.ref[refDomain] || 0) + 1;
+
+        if (!daily.ips.includes(ip)) {
+            daily.uv++;
+            daily.ips.push(ip);
+            daily.os[os] = (daily.os[os] || 0) + 1;
+            daily.br[browser] = (daily.br[browser] || 0) + 1;
+            daily.dev[dev] = (daily.dev[dev] || 0) + 1;
+            daily.geo[geo] = (daily.geo[geo] || 0) + 1;
         }
+        if (!total.ips.includes(ip)) { total.uv++; total.ips.push(ip); }
 
-        function logout() { localStorage.removeItem('sys_pwd'); location.reload(); }
+        const tasks = [
+            env.stat.put(k_daily, JSON.stringify(daily), { expirationTtl: 86400 * 30 }),
+            env.stat.put(k_total, JSON.stringify(total)),
+            env.stat.put(k_online, Date.now().toString(), { expirationTtl: 300 })
+        ];
 
-        async function saveSysConfig() {
-            const pwd = document.getElementById('sys-pwd').value.trim();
-            document.getElementById('sys-pwd').value = pwd; 
-            await fetch('/stats?action=save_sys', { method: 'POST', body: JSON.stringify({pwd}) });
-            if (pwd) localStorage.setItem('sys_pwd', pwd);
-            else localStorage.removeItem('sys_pwd');
-            showToast('设置已保存');
-            setTimeout(() => location.reload(), 1000);
-        }
+        waitUntil(Promise.all(tasks));
 
-        function confirmClearAll() {
-            openModal('警告', '此操作将彻底清空系统内所有配置及历史流量数据。', `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认清空</button>`);
-        }
+        const listed = await env.stat.list({ prefix: `s_${site}_p_` });
+        const onlineCount = listed.keys.length || 1;
 
-        async function doClearAll() {
-            closeModal();
-            showToast('清理中...');
-            await fetch('/stats?action=clear_all', { method: 'POST' });
-            localStorage.removeItem('sys_pwd');
-            location.reload();
-        }
+        return new Response(JSON.stringify({ pv: total.pv, uv: total.uv, dpv: daily.pv, duv: daily.uv, online: onlineCount, geo: geo }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
 
-        async function initApp() {
-            document.getElementById('sys-pwd').value = localStorage.getItem('sys_pwd') || '';
-            document.getElementById('view-login').style.display = 'none';
-            document.getElementById('header-bar').style.display = 'flex';
-            document.getElementById('main-container').style.display = 'block';
-            document.getElementById('nav-bar').style.display = 'flex';
-            const res = await fetch('/stats?action=get_configs');
-            configs = await res.json();
-            renderSites();
-            loadAllStats();
-        }
+    if (action === 'get_dashboard') {
+        let result = { total: { pv:0, uv:0 }, sites: {} };
+        const siteIds = Object.keys(allConfigs);
 
-        function renderSites() {
-            const list = document.getElementById('site-list');
-            list.innerHTML = '';
-            for (let site in configs) {
-                list.innerHTML += `<div class="site-list-item" onclick="openEdit('${site}')"><div class="site-domain">${site}</div><div style="color:var(--text-s);">设置 ›</div></div>`;
-            }
-            if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-s); padding:40px 0;">暂无部署的网站</div>';
-        }
-
-        function renderBarGroup(title, dataObj) {
-            if(!dataObj || Object.keys(dataObj).length === 0) return '';
-            let max = 0;
-            const sorted = Object.entries(dataObj).sort((a,b)=>b[1]-a[1]).slice(0,5);
-            sorted.forEach(e => { if(e[1] > max) max = e[1]; });
+        for (let s of siteIds) {
+            let totalStr = await env.stat.get(`s_${s}_t`);
+            let dailyStr = await env.stat.get(`s_${s}_d_${dateStr}`);
             
-            let html = `<div class="card"><div class="card-title">${title} (Top 5)</div><div class="bar-list">`;
-            sorted.forEach(([k, v]) => {
-                const p = (v/max)*100;
-                html += `<div class="bar-row"><div class="bar-header"><span style="text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:80%;">${k==='/'?'/(首页)':k}</span><span class="bar-val">${v}</span></div><div class="bar-track"><div class="bar-fill" style="width:${p}%;"></div></div></div>`;
-            });
-            html += `</div></div>`;
-            return html;
-        }
-
-        async function loadAllStats() {
-            const res = await fetch('/stats?action=get_dashboard');
-            allStatsData = await res.json();
+            let t = totalStr ? JSON.parse(totalStr) : {pv:0, uv:0};
+            let d = dailyStr ? JSON.parse(dailyStr) : {pv:0, uv:0, os:{}, br:{}, dev:{}, geo:{}, path:{}, ref:{}};
             
-            let optionsHtml = '<option value="all">👑 全部网站汇总</option>';
-            for (let site in allStatsData.sites) optionsHtml += `<option value="${site}">${site}</option>`;
-            document.getElementById('stat-selector').innerHTML = optionsHtml;
-            document.getElementById('stat-selector').value = 'all';
-            selectStat('all');
-        }
-
-        function selectStat(target) {
-            const s = target === 'all' ? allStatsData.total : (allStatsData.sites[target] || {pv:0,uv:0,dpv:0,duv:0,online:0});
-            document.getElementById('d-pv').innerText = s.pv;
-            document.getElementById('d-uv').innerText = s.uv;
-            document.getElementById('d-dpv').innerText = s.dpv || 0;
-            document.getElementById('d-duv').innerText = target === 'all' ? '-' : (s.online || 0);
-
-            let panels = '';
-            if(target !== 'all' && allStatsData.sites[target]) {
-                const sd = allStatsData.sites[target];
-                panels += renderBarGroup('受访页面', sd.path);
-                panels += renderBarGroup('流量来源', sd.ref);
-                panels += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">${renderBarGroup('终端类型', sd.dev)}${renderBarGroup('操作系统', sd.os)}</div>`;
-            } else if (target === 'all') {
-                panels = '<div style="text-align:center; color:var(--text-s); padding:20px;">请在上方选择单个网站查看详细报表</div>';
-            }
-            document.getElementById('stat-detail-panels').innerHTML = panels;
-        }
-
-        function showAddSiteModal() {
-            openModal('添加部署', `<input type="text" id="new-site-input" placeholder="输入网站域名或标识">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmAddSite()">确认</button>`);
-            setTimeout(() => document.getElementById('new-site-input')?.focus(), 300);
-        }
-
-        async function confirmAddSite() {
-            const site = document.getElementById('new-site-input').value.trim();
-            if (!site || configs[site]) return showToast('无效或已存在');
-            closeModal();
-            showToast('初始化中...');
-            configs[site] = { mode: 'invisible', theme: 'light' };
-            await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
-            renderSites();
-            openEdit(site);
-        }
-
-        function openEdit(site) {
-            const c = configs[site] || {};
-            document.getElementById('e-site-id').value = site;
-            document.querySelector(`input[name="e-mode"][value="${c.mode || 'invisible'}"]`).checked = true;
-            document.getElementById('e-theme').value = c.theme || 'light';
+            let onlineList = await env.stat.list({ prefix: `s_${s}_p_` });
             
-            document.getElementById('sys-title').innerText = site;
-            document.getElementById('btn-back').style.display = 'flex';
-            document.getElementById('fab-add').style.display = 'none';
-            document.getElementById('view-edit').classList.add('show');
-            isEditOpen = true;
-        }
-
-        function closeEdit() {
-            document.getElementById('view-edit').classList.remove('show');
-            document.getElementById('btn-back').style.display = 'none';
-            document.getElementById('fab-add').style.display = 'flex';
-            document.getElementById('sys-title').innerText = '数据大盘';
-            document.querySelector('.nav-item').click(); // 回到首页
-            isEditOpen = false;
-        }
-
-        async function saveEdit() {
-            const site = document.getElementById('e-site-id').value;
-            configs[site] = {
-                mode: document.querySelector('input[name="e-mode"]:checked').value,
-                theme: document.getElementById('e-theme').value
+            result.sites[s] = {
+                pv: t.pv, uv: t.uv, dpv: d.pv, duv: d.uv, online: onlineList.keys.length,
+                os: d.os, br: d.br, dev: d.dev, geo: d.geo, path: d.path, ref: d.ref
             };
-            showToast('保存中...');
-            await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
-            showToast('配置已更新');
-            closeEdit();
+            result.total.pv += t.pv;
+            result.total.uv += t.uv;
         }
+        return new Response(JSON.stringify(result), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
 
-        function confirmDeleteFromEdit() {
-            const site = document.getElementById('e-site-id').value;
-            openModal('卸载探针', `确认删除并卸载 <b>${site}</b> 的记录吗？<br><br><label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;"><input type="checkbox" id="del-erase-data" checked> 同时清除其历史流量数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">确认卸载</button>`);
-        }
-
-        async function doDelete(site) {
-            const erase = document.getElementById('del-erase-data').checked;
-            closeModal();
-            showToast('处理中...');
-            delete configs[site];
-            await fetch('/stats?action=delete_site', { method: 'POST', body: JSON.stringify({site, erase}) });
-            renderSites();
-            closeEdit();
-            showToast('已安全卸载');
-        }
-
-        function genLinkFromEdit() {
-            const site = document.getElementById('e-site-id').value;
-            const code = `<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
-            openModal('安装探针', `<div style="font-size:13px; color:var(--text-s); margin-bottom:12px;">复制下方代码，粘贴到网页的 <code>&lt;head&gt;</code> 或 <code>&lt;body&gt;</code> 中即可。</div><div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制探针</button>`);
-        }
-
-        function copyCode(site) {
-            const code = `<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
-            navigator.clipboard.writeText(code);
-            closeModal();
-            showToast('代码已复制');
-        }
-
-        bootSys();
-    </script>
-</body>
-</html>
+    return new Response("Invalid", { status: 400 });
+}
