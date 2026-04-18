@@ -87,14 +87,14 @@
 <body>
 
     <div class="header" id="header-bar" style="display:none;">
-        <div class="btn-back" id="btn-back" onclick="handleBackBtn()">＜ 返回</div>
+        <div class="btn-back" id="btn-back" onclick="closeEdit()">＜ 返回</div>
         <span id="sys-title">网站管理</span>
     </div>
 
     <div id="view-login" class="view">
         <div class="card" style="width:100%; max-width:340px;">
             <div class="card-header" style="text-align:center; font-size:20px;">系统登录</div>
-            <div class="form-group"><input type="text" id="login-pwd" placeholder="请输入系统密码" style="-webkit-text-security:disc;"></div>
+            <div class="form-group"><input type="password" id="login-pwd" placeholder="请输入系统密码"></div>
             <div class="form-group toggle-item" style="justify-content:center; margin-bottom:20px;">
                 <input type="checkbox" id="login-rem" checked> <label for="login-rem">记住密码，下次自动登录</label>
             </div>
@@ -110,11 +110,11 @@
         <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
 
         <div id="tab-stat" class="view" style="padding-bottom:120px;">
-            <div class="card" style="padding:15px; background:var(--primary); color:white; border:none; cursor:pointer;" onclick="openStatSelector()">
-                <div style="font-size:16px; font-weight:600; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <span id="stat-view-title">全站汇总</span>
-                    <span style="font-size:12px; font-weight:normal; opacity:0.8;">点击切换 ▼</span>
-                </div>
+            <div class="form-group">
+                <select id="stat-selector" class="native-select" style="font-weight:600;" onchange="selectStat(this.value)"></select>
+            </div>
+            <div class="card" id="stat-board" style="padding:15px; background:var(--primary); color:white; border:none;">
+                <div style="font-size:16px; font-weight:600; margin-bottom:15px;" id="stat-view-title">全站汇总</div>
                 <div class="stat-grid">
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
@@ -130,7 +130,7 @@
                 <div class="card-header">安全密码设置</div>
                 <div class="form-group"><input type="text" id="sys-pwd" placeholder="设置新密码 (留空则无密码)" oninput="handleSysPwdInput()"></div>
                 <div class="form-group toggle-item" id="sec-rem-pwd" style="display:none; justify-content:space-between; margin-bottom:20px;">
-                    <label>本机记住密码</label><input type="checkbox" id="sys-rem-checkbox" checked>
+                    <label for="sys-rem-checkbox">本机记住密码</label><input type="checkbox" id="sys-rem-checkbox" checked>
                 </div>
                 <button class="btn btn-primary" onclick="saveSysConfig()">保存安全设置</button>
                 <button class="btn btn-outline" id="sec-logout" style="display:none; margin-top:12px; color:var(--danger); border-color:var(--danger);" onclick="logout()">退出登录</button>
@@ -152,8 +152,8 @@
                 </div>
 
                 <div class="form-group toggle-group" style="grid-template-columns:1fr 1fr; margin-bottom:24px;">
-                    <label class="toggle-item"><input type="radio" name="e-layout" value="row" onchange="updatePreview()"> 单行并排</label>
-                    <label class="toggle-item"><input type="radio" name="e-layout" value="grid" onchange="updatePreview()"> 双行矩阵</label>
+                    <label class="toggle-item" for="ly-row"><input type="radio" id="ly-row" name="e-layout" value="row" onchange="updatePreview()"> 单行并排</label>
+                    <label class="toggle-item" for="ly-grid"><input type="radio" id="ly-grid" name="e-layout" value="grid" onchange="updatePreview()"> 双行矩阵</label>
                 </div>
 
                 <div class="label">拖拽改变排列顺序与显隐</div>
@@ -200,6 +200,13 @@
                 <div style="display:flex; gap:12px;">
                     <div class="form-group" style="flex:1;"><input type="text" id="e-v-dpv" oninput="updatePreview()"></div>
                     <div class="form-group" style="flex:1;"><input type="text" id="e-v-duv" oninput="updatePreview()"></div>
+                </div>
+
+                <div style="display:none;">
+                    <input type="checkbox" id="e-t-pv">
+                    <input type="checkbox" id="e-t-uv">
+                    <input type="checkbox" id="e-t-dpv">
+                    <input type="checkbox" id="e-t-duv">
                 </div>
 
                 <div style="margin-top: 30px;">
@@ -261,10 +268,6 @@
             20: { bg: '#ffffff', border: '#000000', val: '#000000', lbl: '#000000' }
         };
 
-        window.addEventListener('popstate', (e) => {
-            if (isEditOpen) closeEdit(true);
-        });
-
         function showToast(msg, ms=1500) {
             const t = document.getElementById('toast');
             t.innerText = msg;
@@ -282,15 +285,12 @@
                 mdBody.appendChild(bodyContent);
             }
             document.getElementById('md-actions').innerHTML = actionsHtml;
-            const ov = document.getElementById('overlay');
-            const md = document.getElementById('modal');
-            ov.style.display = 'flex';
-            setTimeout(() => md.classList.add('show'), 10);
+            document.getElementById('overlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('modal').classList.add('show'), 10);
         }
 
         function closeModal() {
-            const md = document.getElementById('modal');
-            md.classList.remove('show');
+            document.getElementById('modal').classList.remove('show');
             setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 200);
         }
 
@@ -325,9 +325,9 @@
             const res = await fetch('/stats?action=get_sys');
             const data = await res.json();
             sysHasPwd = data.has_pwd;
-            updateSysUI();
             
             if (sysHasPwd) {
+                document.getElementById('sec-logout').style.display = 'flex';
                 const savedPwd = localStorage.getItem('sys_pwd');
                 if (savedPwd) {
                     const lRes = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd: savedPwd}) });
@@ -336,6 +336,7 @@
                 }
                 document.getElementById('view-login').style.display = 'flex';
             } else {
+                document.getElementById('sec-logout').style.display = 'none';
                 initApp();
             }
         }
@@ -372,18 +373,19 @@
             
             if (pwd) {
                 sysHasPwd = true;
+                document.getElementById('sec-logout').style.display = 'flex';
                 if (rem) localStorage.setItem('sys_pwd', pwd);
                 else localStorage.removeItem('sys_pwd');
             } else {
                 sysHasPwd = false;
+                document.getElementById('sec-logout').style.display = 'none';
                 localStorage.removeItem('sys_pwd');
             }
-            updateSysUI();
             showToast('安全设置已保存');
         }
 
         function confirmClearAll() {
-            openModal('危险操作', `清空所有配置及密码？不可恢复。`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认</button>`);
+            openModal('警告', `清空所有配置及密码？不可恢复。`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doClearAll()">确认</button>`);
         }
 
         async function doClearAll() {
@@ -395,8 +397,9 @@
         }
 
         async function initApp() {
-            document.getElementById('sys-pwd').value = localStorage.getItem('sys_pwd') || '';
-            handleSysPwdInput();
+            const savedPwd = localStorage.getItem('sys_pwd') || '';
+            document.getElementById('sys-pwd').value = savedPwd;
+            if(savedPwd) document.getElementById('sec-rem-pwd').style.display = 'flex';
             
             document.getElementById('view-login').style.display = 'none';
             document.getElementById('header-bar').style.display = 'flex';
@@ -429,6 +432,10 @@
             const res = await fetch('/stats?action=get_all_stats');
             allStatsData = await res.json();
             
+            let optionsHtml = '<option value="all">👑 全站汇总</option>';
+            for (let site in allStatsData.sites) optionsHtml += `<option value="${site}">数据源: ${site}</option>`;
+            document.getElementById('stat-selector').innerHTML = optionsHtml;
+            document.getElementById('stat-selector').value = 'all';
             selectStat('all');
             
             let html = '';
@@ -439,33 +446,7 @@
             document.getElementById('stat-detail-list').innerHTML = html;
         }
 
-        function openStatSelector() {
-            if(!allStatsData || Object.keys(allStatsData.sites).length === 0) return showToast('暂无网站');
-            
-            const wrapper = document.createElement('div');
-            wrapper.style = 'max-height:250px; overflow-y:auto; margin-bottom:10px; border:1px solid var(--border); border-radius:12px; padding:5px; text-align:left;';
-            
-            const allBtn = document.createElement('div');
-            allBtn.style = 'padding:14px; border-bottom:1px solid var(--border); cursor:pointer; font-weight:600; color:var(--primary);';
-            allBtn.innerText = '👑 全站汇总';
-            allBtn.onclick = function() { selectStat('all'); closeModal(); };
-            wrapper.appendChild(allBtn);
-            
-            const sites = Object.keys(allStatsData.sites);
-            for(let i=0; i<sites.length; i++) {
-                const sBtn = document.createElement('div');
-                sBtn.style = 'padding:14px; cursor:pointer; font-size:15px;';
-                if (i !== sites.length - 1) sBtn.style.borderBottom = '1px solid var(--bg)';
-                sBtn.innerText = sites[i];
-                sBtn.onclick = function() { selectStat(sites[i]); closeModal(); };
-                wrapper.appendChild(sBtn);
-            }
-            
-            openModal('选择数据源', wrapper, `<button class="btn btn-outline" onclick="closeModal()">取消</button>`);
-        }
-
         function selectStat(target) {
-            if(!allStatsData) return;
             const s = target === 'all' ? allStatsData.total : (allStatsData.sites[target] || {pv:0,uv:0,dpv:0,duv:0});
             document.getElementById('stat-view-title').innerText = target === 'all' ? '全站汇总' : target;
             document.getElementById('all-pv').innerText = s.pv;
@@ -476,7 +457,6 @@
 
         function showAddSiteModal() {
             openModal('添加网站', `<input type="text" id="new-site-input" placeholder="输入名称" style="margin-top:10px;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="confirmAddSite()">确认</button>`);
-            setTimeout(() => document.getElementById('new-site-input')?.focus(), 300);
         }
 
         async function confirmAddSite() {
@@ -497,7 +477,9 @@
                 const isChecked = document.getElementById(`e-t-${k}`).checked;
                 list.innerHTML += `
                 <div class="sort-item" style="opacity:${isChecked?1:0.5};">
-                    <label style="display:flex; align-items:center; gap:8px;"><input type="checkbox" id="ls-t-${k}" ${isChecked?'checked':''} onchange="syncShows('${k}')"> ${keyMap[k]}</label>
+                    <label style="display:flex; align-items:center; gap:8px;" for="ls-t-${k}">
+                        <input type="checkbox" id="ls-t-${k}" ${isChecked?'checked':''} onchange="syncShows('${k}')"> ${keyMap[k]}
+                    </label>
                     <div class="sort-btns">
                         <span style="cursor:pointer; opacity:${idx===0?0.2:1};" onclick="moveOrder(${idx}, -1)">▲</span>
                         <span style="cursor:pointer; opacity:${idx===3?0.2:1};" onclick="moveOrder(${idx}, 1)">▼</span>
@@ -547,8 +529,7 @@
 
         function checkChanges() {
             const site = document.getElementById('e-site-id').value;
-            const c = configs[site];
-            if (!c) return;
+            if (!configs[site]) return;
 
             const layoutNode = document.querySelector('input[name="e-layout"]:checked');
             const currObj = {
@@ -573,76 +554,65 @@
             if (JSON.stringify(currObj) !== currentOriginalConfigStr) {
                 btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.innerText = '保存修改';
             } else {
-                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.innerText = '无变化不可存';
+                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.innerText = '无变动不可存';
             }
         }
 
         function openEdit(site) {
-            try {
-                const c = configs[site] || {};
-                document.getElementById('e-site-id').value = site;
-                
-                currentOrder = Array.isArray(c.order) ? [...c.order] : ['pv','uv','dpv','duv'];
-                const shows = c.shows || {pv:true, uv:true, dpv:true, duv:true};
-                
-                document.getElementById('e-t-pv').checked = !!shows.pv;
-                document.getElementById('e-t-uv').checked = !!shows.uv;
-                document.getElementById('e-t-dpv').checked = !!shows.dpv;
-                document.getElementById('e-t-duv').checked = !!shows.duv;
-                
-                document.getElementById('e-align').value = c.align || 'center';
-                document.getElementById('e-scale').value = c.scale || 1;
-                document.getElementById('e-tpl-select').value = c.tpl || 1;
-                
-                const layoutRadio = document.querySelector(`input[name="e-layout"][value="${c.layout || 'row'}"]`);
-                if(layoutRadio) layoutRadio.checked = true;
+            const c = configs[site] || {};
+            document.getElementById('e-site-id').value = site;
+            
+            currentOrder = Array.isArray(c.order) ? [...c.order] : ['pv','uv','dpv','duv'];
+            const shows = c.shows || {pv:true, uv:true, dpv:true, duv:true};
+            
+            document.getElementById('e-t-pv').checked = !!shows.pv;
+            document.getElementById('e-t-uv').checked = !!shows.uv;
+            document.getElementById('e-t-dpv').checked = !!shows.dpv;
+            document.getElementById('e-t-duv').checked = !!shows.duv;
+            
+            document.getElementById('e-align').value = c.align || 'center';
+            document.getElementById('e-scale').value = c.scale || 1;
+            document.getElementById('e-tpl-select').value = c.tpl || 1;
+            
+            const layoutRadios = document.getElementsByName('e-layout');
+            for(let r of layoutRadios) { if(r.value === (c.layout || 'row')) r.checked = true; }
 
-                document.getElementById('e-v-pv').value = c.pv || '总访问';
-                document.getElementById('e-v-uv').value = c.uv || '总访客';
-                document.getElementById('e-v-dpv').value = c.dpv || '今日访问';
-                document.getElementById('e-v-duv').value = c.duv || '今日访客';
+            document.getElementById('e-v-pv').value = c.pv || '总访问';
+            document.getElementById('e-v-uv').value = c.uv || '总访客';
+            document.getElementById('e-v-dpv').value = c.dpv || '今日访问';
+            document.getElementById('e-v-duv').value = c.duv || '今日访客';
 
-                renderSortList();
-                
-                const currentLayoutNode = document.querySelector('input[name="e-layout"]:checked');
-                const currObj = {
-                    tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
-                    scale: parseFloat(document.getElementById('e-scale').value) || 1,
-                    align: document.getElementById('e-align').value || 'center',
-                    layout: currentLayoutNode ? currentLayoutNode.value : 'row',
-                    order: currentOrder,
-                    pv: document.getElementById('e-v-pv').value,
-                    uv: document.getElementById('e-v-uv').value,
-                    dpv: document.getElementById('e-v-dpv').value,
-                    duv: document.getElementById('e-v-duv').value,
-                    shows: {
-                        pv: document.getElementById('e-t-pv').checked,
-                        uv: document.getElementById('e-t-uv').checked,
-                        dpv: document.getElementById('e-t-dpv').checked,
-                        duv: document.getElementById('e-t-duv').checked
-                    }
-                };
-                currentOriginalConfigStr = JSON.stringify(currObj);
-                checkChanges();
+            renderSortList();
+            
+            const currentLayoutNode = document.querySelector('input[name="e-layout"]:checked');
+            const currObj = {
+                tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
+                scale: parseFloat(document.getElementById('e-scale').value) || 1,
+                align: document.getElementById('e-align').value || 'center',
+                layout: currentLayoutNode ? currentLayoutNode.value : 'row',
+                order: currentOrder,
+                pv: document.getElementById('e-v-pv').value,
+                uv: document.getElementById('e-v-uv').value,
+                dpv: document.getElementById('e-v-dpv').value,
+                duv: document.getElementById('e-v-duv').value,
+                shows: { pv: !!shows.pv, uv: !!shows.uv, dpv: !!shows.dpv, duv: !!shows.duv }
+            };
+            currentOriginalConfigStr = JSON.stringify(currObj);
+            checkChanges();
 
-                document.getElementById('btn-back').style.display = 'flex';
-                document.getElementById('fab-add').style.display = 'none';
-                document.getElementById('view-edit').classList.add('show');
-                isEditOpen = true;
-                try { history.pushState({view: 'edit'}, ''); } catch(e) {}
-            } catch (e) {
-                showToast('读取配置失败');
-            }
+            document.getElementById('btn-back').style.display = 'flex';
+            document.getElementById('fab-add').style.display = 'none';
+            document.getElementById('view-edit').classList.add('show');
+            isEditOpen = true;
         }
 
-        function handleBackBtn() { if (isEditOpen) history.back(); }
+        function handleBackBtn() { closeEdit(); }
 
-        function closeEdit(fromPop = false) {
+        function closeEdit() {
             document.getElementById('view-edit').classList.remove('show');
             document.getElementById('btn-back').style.display = 'none';
             document.getElementById('fab-add').style.display = 'flex';
             isEditOpen = false;
-            if(!fromPop) history.back();
         }
 
         async function saveEdit() {
@@ -675,7 +645,7 @@
 
         function confirmDeleteFromEdit() {
             const site = document.getElementById('e-site-id').value;
-            openModal('确认删除', `确定删除 <b>${site}</b> 吗？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;"><input type="checkbox" id="del-erase-data" checked> 同时彻底清除历史统计数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">删除</button>`);
+            openModal('确认删除', `删除 <b>${site}</b> ？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;cursor:pointer;"><input type="checkbox" id="del-erase-data" checked> 同时清除历史统计数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">删除</button>`);
         }
 
         async function doDelete(site) {
@@ -692,7 +662,7 @@
         function genLinkFromEdit() {
             const site = document.getElementById('e-site-id').value;
             const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
-            openModal('统计代码', `<div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制</button>`);
+            openModal('专属统计代码', `<div class="code-preview">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`, `<button class="btn btn-outline" onclick="closeModal()">关闭</button><button class="btn btn-primary" onclick="copyCode('${site}')">复制</button>`);
         }
 
         function copyCode(site) {
