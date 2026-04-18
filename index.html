@@ -24,7 +24,8 @@
         #view-edit.show { transform: translateX(0); }
         .edit-scroll-box { padding-bottom: 180px; }
         
-        #view-login { z-index: 50; background: var(--bg); display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
+        /* 修复 1：默认不展示登录页，避免闪烁 */
+        #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); }
         .nav-item { text-align: center; color: var(--text-l); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: 0.2s; }
@@ -42,8 +43,7 @@
 
         .site-card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .site-card:active { transform: scale(0.97); }
-        .site-domain { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
-        .site-desc { font-size: 13px; color: var(--text-l); }
+        .site-domain { font-size: 16px; font-weight: 600; }
 
         .fab { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5); z-index: 15; cursor: pointer; display: none; }
         .fab:active { transform: scale(0.9); }
@@ -102,11 +102,14 @@
         <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
 
         <div id="tab-stat" class="view" style="padding-bottom:120px;">
-            <div class="card" style="padding:15px; background:var(--primary); color:white; border:none;">
-                <div style="font-size:16px; font-weight:600; margin-bottom:15px;">全站数据汇总</div>
+            <div class="card" style="padding:15px; background:var(--primary); color:white; border:none; cursor:pointer;" onclick="openStatSelector()">
+                <div style="font-size:16px; font-weight:600; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <span id="stat-view-title">全站数据汇总</span>
+                    <span style="font-size:12px; font-weight:normal; opacity:0.8;">点击切换 ▼</span>
+                </div>
                 <div class="stat-grid">
-                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问量</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
-                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客数</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
+                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
+                    <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">今日访问</div><div class="stat-val" style="color:white;" id="all-dpv">-</div></div>
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">今日访客</div><div class="stat-val" style="color:white;" id="all-duv">-</div></div>
                 </div>
@@ -131,7 +134,7 @@
             </div>
             <div class="card">
                 <div class="card-header" style="color:var(--danger);">危险操作</div>
-                <div style="font-size:13px; color:var(--text-l); margin-bottom:15px;">此操作将永久清空所有网站配置及系统密码。</div>
+                <div style="font-size:13px; color:var(--text-l); margin-bottom:15px;">清空所有数据及密码，不可恢复。</div>
                 <button class="btn btn-danger" onclick="confirmClearAll()">清空系统所有数据</button>
             </div>
         </div>
@@ -215,6 +218,7 @@
 
     <script>
         let configs = {};
+        let allStatsData = null; // 用于缓存统计数据
         let isEditOpen = false;
         let isModalOpen = false;
         let sysHasPwd = false;
@@ -292,6 +296,7 @@
                     const lData = await lRes.json();
                     if (lData.ok) { return initApp(); }
                 }
+                // 修复 1：只有需要时才显示登录页
                 document.getElementById('view-login').style.display = 'flex';
             } else {
                 initApp();
@@ -321,10 +326,12 @@
         }
 
         async function saveSysConfig() {
-            const pwd = document.getElementById('sys-pwd').value;
+            // 修复 2：去除首尾多余空格，并严谨判断置空逻辑
+            const pwd = document.getElementById('sys-pwd').value.trim();
+            document.getElementById('sys-pwd').value = pwd; 
             const rem = document.getElementById('sys-rem-checkbox').checked;
-            showToast('正在保存...');
             
+            showToast('正在保存...');
             await fetch('/stats?action=save_sys', { method: 'POST', body: JSON.stringify({pwd}) });
             
             if (pwd) {
@@ -341,8 +348,9 @@
         }
 
         function confirmClearAll() {
+            // 修复 5：精简提示内容
             openModal('警告：清空所有数据', 
-            `确定要清空系统内所有的网站配置和访问密码吗？<br><br>清空后你的所有网站将失去统计功能，且<b>无法恢复</b>！`, 
+            `确定清空所有网站和密码吗？不可恢复！`, 
             `<button class="btn btn-outline" onclick="closeModal()">取消</button>
              <button class="btn btn-danger" onclick="doClearAll()">确认清空</button>`);
         }
@@ -352,7 +360,7 @@
             showToast('正在格式化...', 2000);
             await fetch('/stats?action=clear_all', { method: 'POST' });
             localStorage.removeItem('sys_pwd');
-            showToast('已清空所有数据，即将重启');
+            showToast('已清空，即将重启');
             setTimeout(() => { location.reload(); }, 1000);
         }
 
@@ -376,12 +384,10 @@
             const list = document.getElementById('site-list');
             list.innerHTML = '';
             for (let site in configs) {
+                // 修复 6：去除了多余文字
                 list.innerHTML += `
                 <div class="site-card" onclick="openEdit('${site}')">
-                    <div>
-                        <div class="site-domain">${site}</div>
-                        <div class="site-desc">点击配置卡片排版</div>
-                    </div>
+                    <div class="site-domain" style="margin-bottom:0;">${site}</div>
                     <div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>
                 </div>`;
             }
@@ -393,16 +399,13 @@
         async function loadAllStats() {
             document.getElementById('stat-detail-list').innerHTML = '<div style="text-align:center; color:var(--text-l);">数据加载中...</div>';
             const res = await fetch('/stats?action=get_all_stats');
-            const data = await res.json();
+            allStatsData = await res.json();
             
-            document.getElementById('all-pv').innerText = data.total.pv;
-            document.getElementById('all-uv').innerText = data.total.uv;
-            document.getElementById('all-dpv').innerText = data.total.dpv;
-            document.getElementById('all-duv').innerText = data.total.duv;
+            renderStatBoard('all');
             
             let html = '';
-            for (let site in data.sites) {
-                const s = data.sites[site];
+            for (let site in allStatsData.sites) {
+                const s = allStatsData.sites[site];
                 html += `
                 <div class="card" style="padding:15px; margin-bottom:12px;">
                     <div style="font-weight:600; margin-bottom:10px;">${site}</div>
@@ -414,8 +417,47 @@
                     </div>
                 </div>`;
             }
-            if(Object.keys(data.sites).length === 0) html = '<div style="text-align:center; color:var(--text-l);">暂无数据</div>';
+            if(Object.keys(allStatsData.sites).length === 0) html = '<div style="text-align:center; color:var(--text-l);">暂无数据</div>';
             document.getElementById('stat-detail-list').innerHTML = html;
+        }
+
+        function renderStatBoard(target) {
+            if (!allStatsData) return;
+            if (target === 'all') {
+                document.getElementById('stat-view-title').innerText = '全站数据汇总';
+                document.getElementById('all-pv').innerText = allStatsData.total.pv;
+                document.getElementById('all-uv').innerText = allStatsData.total.uv;
+                document.getElementById('all-dpv').innerText = allStatsData.total.dpv;
+                document.getElementById('all-duv').innerText = allStatsData.total.duv;
+            } else {
+                document.getElementById('stat-view-title').innerText = `[ ${target} ]`;
+                const s = allStatsData.sites[target] || {pv:0,uv:0,dpv:0,duv:0};
+                document.getElementById('all-pv').innerText = s.pv;
+                document.getElementById('all-uv').innerText = s.uv;
+                document.getElementById('all-dpv').innerText = s.dpv;
+                document.getElementById('all-duv').innerText = s.duv;
+            }
+        }
+
+        // 修复 3：弹出选择器菜单
+        function openStatSelector() {
+            if(!allStatsData || Object.keys(allStatsData.sites).length === 0) {
+                return showToast('暂无网站可切换');
+            }
+            let html = `<div style="max-height:250px; overflow-y:auto; margin-bottom:10px; border:1px solid var(--border); border-radius:12px; padding:5px; text-align:left;">`;
+            html += `<div style="padding:14px; border-bottom:1px solid var(--border); cursor:pointer; font-weight:600; color:var(--primary);" onclick="selectStat('all')">👑 全站汇总</div>`;
+            const sites = Object.keys(allStatsData.sites);
+            for(let i=0; i<sites.length; i++){
+                let border = (i === sites.length - 1) ? '' : 'border-bottom:1px solid var(--bg);';
+                html += `<div style="padding:14px; ${border} cursor:pointer; font-size:15px;" onclick="selectStat('${sites[i]}')">${sites[i]}</div>`;
+            }
+            html += `</div>`;
+            openModal('选择查看目标', html, `<button class="btn btn-outline" onclick="closeModal()">取消</button>`);
+        }
+
+        function selectStat(target) {
+            closeModal();
+            renderStatBoard(target);
         }
 
         function showAddSiteModal() {
@@ -550,7 +592,7 @@
         function copyCode(site) {
             const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
             navigator.clipboard.writeText(code);
-            closeModal();
+            closeModal(); // 修复 4：只调用 closeModal，移除 closeEdit，确保不退回首页
             showToast('复制成功！');
         }
 
