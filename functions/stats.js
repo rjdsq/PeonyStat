@@ -2,7 +2,7 @@ export async function onRequest(context) {
     const { request, env, waitUntil } = context;
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
-    const site = url.searchParams.get('site') || 'default';
+    const site = url.searchParams.get('site') || '1';
 
     const corsHeaders = {
         "Access-Control-Allow-Origin": "*",
@@ -30,9 +30,37 @@ export async function onRequest(context) {
         return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
+    if (action === 'delete_site' && request.method === 'POST') {
+        let data = {};
+        try { data = await request.json(); } catch(e) {}
+        if (data.site && allConfigs[data.site]) {
+            delete allConfigs[data.site];
+            await env.RE_STAT.put(k_config, JSON.stringify(allConfigs));
+        }
+        return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
+    if (action === 'clear_all' && request.method === 'POST') {
+        await env.RE_STAT.put(k_config, JSON.stringify({}));
+        return new Response(JSON.stringify({status: "ok"}), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
     if (action === 'script') {
-        const conf = allConfigs[site] || { align: 'center', pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客' };
-        const alignRule = conf.align === 'center' ? 'justify-content: center;' : (conf.align === 'right' ? 'justify-content: flex-end;' : 'justify-content: flex-start;');
+        const conf = allConfigs[site] || { tpl: 1, pv: 'PV', uv: 'UV', dpv: '今PV', duv: '今UV', shows: {pv:true, uv:true, dpv:true, duv:true} };
+        
+        const templates = {
+            1: { bg: '#f9f7f2', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' },
+            2: { bg: '#ffffff', border: '#f4f1eb', val: '#5c5c5c', lbl: '#a0b5a6' },
+            3: { bg: '#eef0ed', border: '#eef0ed', val: '#8da493', lbl: '#788583' },
+            4: { bg: '#f5f0ef', border: '#ece5e3', val: '#bca39f', lbl: '#a5acaa' },
+            5: { bg: '#f2f5f6', border: '#e8edf0', val: '#7f93a1', lbl: '#a5acaa' },
+            6: { bg: '#fafafa', border: '#333333', val: '#333333', lbl: '#666666' },
+            7: { bg: '#333333', border: '#333333', val: '#f9f7f2', lbl: '#a5acaa' },
+            8: { bg: '#f9f9f9', border: '#d0b8b4', val: '#d0b8b4', lbl: '#a5acaa' },
+            9: { bg: '#ffffff', border: '#a0b5a6', val: '#a0b5a6', lbl: '#a5acaa' },
+            10: { bg: 'transparent', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' }
+        };
+        const t = templates[conf.tpl || 1] || templates[1];
 
         const trackerJs = `
         (async function() {
@@ -45,12 +73,13 @@ export async function onRequest(context) {
                 resData = await response.json();
             } catch(e) { return; }
 
-            container.innerHTML = \`<div style="display:flex; flex-wrap:wrap; gap:12px; font-family:-apple-system,sans-serif; \${alignRule}">
-                <div style="background:#f9f7f2; padding:12px 16px; border-radius:12px; border:1px solid #ece9e0;"><div style="font-size:11px; color:#a5acaa; margin-bottom:4px;">${conf.pv}</div><div style="font-size:18px; color:#788583; font-weight:600;">\${resData.pv}</div></div>
-                <div style="background:#f9f7f2; padding:12px 16px; border-radius:12px; border:1px solid #ece9e0;"><div style="font-size:11px; color:#a5acaa; margin-bottom:4px;">${conf.uv}</div><div style="font-size:18px; color:#788583; font-weight:600;">\${resData.uv}</div></div>
-                <div style="background:#f9f7f2; padding:12px 16px; border-radius:12px; border:1px solid #ece9e0;"><div style="font-size:11px; color:#a5acaa; margin-bottom:4px;">${conf.dpv}</div><div style="font-size:18px; color:#788583; font-weight:600;">\${resData.dpv}</div></div>
-                <div style="background:#f9f7f2; padding:12px 16px; border-radius:12px; border:1px solid #ece9e0;"><div style="font-size:11px; color:#a5acaa; margin-bottom:4px;">${conf.duv}</div><div style="font-size:18px; color:#788583; font-weight:600;">\${resData.duv}</div></div>
-            </div>\`;
+            let items = [];
+            if(${conf.shows.pv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:12px; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:11px; color:${t.lbl}; margin-bottom:4px;">${conf.pv}</div><div style="font-size:16px; color:${t.val}; font-weight:600;">\${resData.pv}</div></div>\`);
+            if(${conf.shows.uv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:12px; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:11px; color:${t.lbl}; margin-bottom:4px;">${conf.uv}</div><div style="font-size:16px; color:${t.val}; font-weight:600;">\${resData.uv}</div></div>\`);
+            if(${conf.shows.dpv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:12px; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:11px; color:${t.lbl}; margin-bottom:4px;">${conf.dpv}</div><div style="font-size:16px; color:${t.val}; font-weight:600;">\${resData.dpv}</div></div>\`);
+            if(${conf.shows.duv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:12px; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:11px; color:${t.lbl}; margin-bottom:4px;">${conf.duv}</div><div style="font-size:16px; color:${t.val}; font-weight:600;">\${resData.duv}</div></div>\`);
+
+            container.innerHTML = \`<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; text-align:center; font-family:-apple-system,sans-serif;">\${items.join('')}</div>\`;
         })();`;
         return new Response(trackerJs, { headers: { "Content-Type": "application/javascript", ...corsHeaders } });
     }
