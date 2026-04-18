@@ -19,9 +19,9 @@
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .view.active { opacity: 1; pointer-events: auto; }
         
-        #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; }
+        #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; padding: 0; }
         #view-edit.show { transform: translateX(0); }
-        .edit-scroll-box { padding-bottom: 120px; }
+        .edit-scroll-box { padding: 20px 20px 120px 20px; }
         
         #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
@@ -54,29 +54,29 @@
 
         .form-group { margin-bottom: 18px; }
         .label { font-size: 13px; color: var(--text-m); margin-bottom: 10px; font-weight: 500; }
-        input[type="text"], input[type="password"], select.native-select { width: 100%; background: var(--card); border: 1px solid var(--border); height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; color: var(--text-m); outline: none; -webkit-appearance: none; }
+        input[type="text"], input[type="password"], select.native-select { width: 100%; background: var(--bg); border: 1px solid var(--border); height: 48px; padding: 0 16px; border-radius: 12px; font-size: 15px; color: var(--text-m); outline: none; -webkit-appearance: none; }
         input:focus, select.native-select:focus { border-color: var(--primary); }
         
         input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; height: 40px; margin: 0; padding: 0;}
         input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--primary); margin-top: -10px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
         input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: var(--border); border-radius: 2px; }
         
-        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--card); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
+        .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: var(--bg); padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
         .toggle-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-m); }
         input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; accent-color: var(--primary); }
 
-        .color-picker-wrap { display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--border); padding:8px 12px; border-radius:12px; font-size:13px; }
-        .color-picker-wrap input[type="color"] { border:none; width:34px; height:34px; border-radius:50%; padding:0; cursor:pointer; background:transparent; }
-        .color-picker-wrap input[type="color"]::-webkit-color-swatch-wrapper { padding:0; }
-        .color-picker-wrap input[type="color"]::-webkit-color-swatch { border:none; border-radius:50%; box-shadow:0 0 0 1px var(--border); }
-        .hex-input { width:70px !important; height:34px !important; padding:0 5px !important; font-family:monospace; text-align:center; font-size:13px !important; border-radius:8px !important; }
+        .color-row { display:flex; justify-content:space-between; align-items:center; background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:12px; margin-bottom:10px; }
+        .color-title { font-size:13px; color:var(--text-m); width:60px; }
+        .color-swatches { display:flex; gap:8px; }
+        .swatch { width:26px; height:26px; border-radius:50%; border:1px solid var(--border); cursor:pointer; }
+        .hex-input { width:70px !important; height:28px !important; padding:0 5px !important; font-family:monospace; text-align:center; font-size:12px !important; border-radius:6px !important; border:1px solid var(--border); background:var(--card) !important; margin:0;}
 
-        .sort-list { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 8px; }
-        .sort-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--bg); font-size: 14px; }
+        .sort-list { background: var(--bg); border-radius: 14px; border: 1px solid var(--border); padding: 8px; }
+        .sort-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
         .sort-item:last-child { border-bottom: none; }
         .sort-btns { display: flex; gap: 15px; color: var(--primary); font-size: 18px; font-weight: bold; }
         
-        .inline-name { background: transparent; border: none; border-bottom: 1px dashed var(--primary); width: 80px; text-align: left; color: var(--text-m); font-size: 14px; margin-left: 10px; padding: 2px 0; outline: none; }
+        .inline-name { background: transparent; border: none; border-bottom: 1px dashed var(--primary); width: 65px; text-align: center; color: var(--text-m); font-size: 14px; margin-left: 8px; padding: 2px 0; outline: none; border-radius: 0 !important; height: auto !important; }
         .inline-name:focus { border-bottom-style: solid; }
 
         .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; }
@@ -94,7 +94,8 @@
         
         .code-preview { background: var(--bg); border: 1px solid var(--border); padding: 16px; border-radius: 12px; font-family: monospace; font-size: 13px; word-break: break-all; text-align: left; color: var(--text-m); max-height: 120px; overflow-y: auto; margin-bottom: 12px; }
         
-        .live-preview-box { background: var(--card); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px 10px; margin-bottom: 20px; min-height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .sticky-preview { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 20px 20px 10px 20px; border-bottom: 1px solid var(--border); }
+        .live-preview-box { background: var(--card); border: 1px dashed var(--primary); border-radius: 16px; padding: 20px 10px; min-height: 80px; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         
         .toast { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 14px 28px; border-radius: 14px; font-size: 15px; display: none; z-index: 200; font-weight: 500; white-space: nowrap; }
     </style>
@@ -126,7 +127,7 @@
 
         <div id="tab-stat" class="view" style="padding-bottom:120px;">
             <div class="form-group">
-                <select id="stat-selector" class="native-select" style="font-weight:600;" onchange="selectStat(this.value)"></select>
+                <select id="stat-selector" class="native-select" style="font-weight:600; background:var(--card);" onchange="selectStat(this.value)"></select>
             </div>
             <div class="card" id="stat-board" style="padding:15px; background:var(--primary); color:white; border:none;">
                 <div style="font-size:16px; font-weight:600; margin-bottom:15px;" id="stat-view-title">全站汇总</div>
@@ -156,88 +157,130 @@
         </div>
 
         <div id="view-edit" class="view">
+            <div class="sticky-preview">
+                <div class="live-preview-box" id="live-preview-container"></div>
+            </div>
+            
             <div class="edit-scroll-box">
                 <input type="hidden" id="e-site-id">
                 
-                <div class="live-preview-box" id="live-preview-container"></div>
-
-                <div class="form-group">
-                    <div class="label">展示模板选择</div>
-                    <select id="e-tpl-select" class="native-select" onchange="updatePreview()">
-                        <option value="1">燕麦暖色</option>
-                        <option value="2">纯白经典</option>
-                        <option value="3">灰绿冷调</option>
-                        <option value="4">藕荷粉黛</option>
-                        <option value="5">雾霾灰蓝</option>
-                        <option value="6">暗影极黑</option>
-                        <option value="7">黑武士</option>
-                        <option value="8">粉霜初绽</option>
-                        <option value="9">森系留白</option>
-                        <option value="10">隐形无框</option>
-                        <option value="11">霓虹幻影</option>
-                        <option value="12">极客黑客</option>
-                        <option value="13">咖啡醇香</option>
-                        <option value="14">深海幽蓝</option>
-                        <option value="15">落日余晖</option>
-                        <option value="16">森林秘境</option>
-                        <option value="17">樱落柔情</option>
-                        <option value="18">薰衣草紫</option>
-                        <option value="19">珊瑚橘暖</option>
-                        <option value="20">极致极简</option>
-                    </select>
-                </div>
-
-                <div class="form-group toggle-item" style="margin-bottom:15px;">
-                    <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="e-use-custom" onchange="updatePreview()"> 启用自定义配色 (覆盖模板)</label>
-                </div>
-
-                <div id="custom-color-panel" style="display:none; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px;">
-                    <div class="color-picker-wrap">
-                        <span>大框底色</span>
-                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-box" class="hex-input" oninput="document.getElementById('c-box').value=this.value; updatePreview();"><input type="color" id="c-box" value="#ffffff" oninput="document.getElementById('t-c-box').value=this.value; updatePreview();"></div>
+                <div class="card">
+                    <div class="card-header">布局与尺寸</div>
+                    <div class="form-group toggle-group" style="margin-bottom:16px;">
+                        <label class="toggle-item"><input type="radio" name="e-layout" value="row" onchange="updatePreview()"> 单行</label>
+                        <label class="toggle-item"><input type="radio" name="e-layout" value="grid" onchange="updatePreview()"> 双行</label>
                     </div>
-                    <div class="color-picker-wrap">
-                        <span>小框底色</span>
-                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-item" class="hex-input" oninput="document.getElementById('c-item').value=this.value; updatePreview();"><input type="color" id="c-item" value="#f9f7f2" oninput="document.getElementById('t-c-item').value=this.value; updatePreview();"></div>
+                    
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-l); margin-bottom:5px;"><span>左偏移</span><span>居中</span><span>右偏移</span></div>
+                        <input type="range" id="e-offset" min="-50" max="50" step="1" value="0" oninput="updatePreview()">
                     </div>
-                    <div class="color-picker-wrap">
-                        <span>字体颜色</span>
-                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-lbl" class="hex-input" oninput="document.getElementById('c-lbl').value=this.value; updatePreview();"><input type="color" id="c-lbl" value="#a5acaa" oninput="document.getElementById('t-c-lbl').value=this.value; updatePreview();"></div>
+                    
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">整体比例大小</div>
+                        <input type="range" id="e-scale" min="0.5" max="1" step="0.05" value="1" oninput="updatePreview()">
                     </div>
-                    <div class="color-picker-wrap">
-                        <span>动态数值</span>
-                        <div style="display:flex;gap:6px;"><input type="text" id="t-c-val" class="hex-input" oninput="document.getElementById('c-val').value=this.value; updatePreview();"><input type="color" id="c-val" value="#788583" oninput="document.getElementById('t-c-val').value=this.value; updatePreview();"></div>
+                    
+                    <div style="display:flex; gap:12px;">
+                        <div style="flex:1;">
+                            <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">大框边距</div>
+                            <input type="range" id="e-pad-box" min="0" max="2" step="0.1" value="0.6" oninput="updatePreview()">
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">左右内距</div>
+                            <input type="range" id="e-pad-item-x" min="0.1" max="2" step="0.1" value="0.8" oninput="updatePreview()">
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">上下内距</div>
+                            <input type="range" id="e-pad-item-y" min="0.1" max="2" step="0.1" value="0.6" oninput="updatePreview()">
+                        </div>
                     </div>
                 </div>
 
-                <div class="label">拖拽改变模块顺序、文案与显隐</div>
-                <div class="sort-list form-group" id="sort-list"></div>
-
-                <div class="label">调整留白与偏移</div>
-                <div class="form-group toggle-group" style="grid-template-columns:1fr 1fr; margin-bottom:12px;">
-                    <label class="toggle-item" for="ly-row"><input type="radio" id="ly-row" name="e-layout" value="row" onchange="updatePreview()"> 单行并排</label>
-                    <label class="toggle-item" for="ly-grid"><input type="radio" id="ly-grid" name="e-layout" value="grid" onchange="updatePreview()"> 双行矩阵</label>
-                </div>
-                
-                <div class="form-group" style="margin-bottom:12px;">
-                    <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-l); margin-bottom:5px;"><span>左偏移</span><span>居中</span><span>右偏移</span></div>
-                    <input type="range" id="e-offset" min="-50" max="50" step="1" value="0" oninput="updatePreview()">
-                </div>
-                
-                <div style="display:flex; gap:12px; margin-bottom:24px;">
-                    <div style="flex:1;">
-                        <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">大框内距</div>
-                        <input type="range" id="e-pad-box" min="0" max="2" step="0.1" value="0.6" oninput="updatePreview()">
-                    </div>
-                    <div style="flex:1;">
-                        <div style="font-size:12px; color:var(--text-l); margin-bottom:5px;">小框内距</div>
-                        <input type="range" id="e-pad-item" min="0.1" max="2" step="0.1" value="0.6" oninput="updatePreview()">
-                    </div>
+                <div class="card">
+                    <div class="card-header">数据排序与文案</div>
+                    <div style="font-size:12px; color:var(--text-l); margin-bottom:12px;">勾选显隐，点击文字修改，右侧调整顺序</div>
+                    <div class="sort-list" id="sort-list"></div>
                 </div>
 
-                <div class="form-group">
-                    <div class="label">整体尺寸比例缩放</div>
-                    <input type="range" id="e-scale" min="0.5" max="1" step="0.05" value="1" oninput="updatePreview()">
+                <div class="card">
+                    <div class="card-header">色彩定制</div>
+                    <div class="form-group">
+                        <select id="e-tpl-select" class="native-select" onchange="updatePreview()">
+                            <option value="1">燕麦暖色</option>
+                            <option value="2">纯白经典</option>
+                            <option value="3">灰绿冷调</option>
+                            <option value="4">藕荷粉黛</option>
+                            <option value="5">雾霾灰蓝</option>
+                            <option value="6">暗影极黑</option>
+                            <option value="7">黑武士</option>
+                            <option value="8">粉霜初绽</option>
+                            <option value="9">森系留白</option>
+                            <option value="10">隐形无框</option>
+                            <option value="11">霓虹幻影</option>
+                            <option value="12">极客黑客</option>
+                            <option value="13">咖啡醇香</option>
+                            <option value="14">深海幽蓝</option>
+                            <option value="15">落日余晖</option>
+                            <option value="16">森林秘境</option>
+                            <option value="17">樱落柔情</option>
+                            <option value="18">薰衣草紫</option>
+                            <option value="19">珊瑚橘暖</option>
+                            <option value="20">极致极简</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group toggle-item" style="margin-bottom:15px; border-top:1px dashed var(--border); padding-top:15px;">
+                        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="e-use-custom" onchange="updatePreview()"> 自定义配色 (覆盖上方模板)</label>
+                    </div>
+
+                    <div id="custom-color-panel" style="display:none; flex-direction:column; gap:8px;">
+                        <div class="color-row">
+                            <span class="color-title">大框</span>
+                            <div class="color-swatches">
+                                <span class="swatch" style="background:transparent; border:1px dashed #ccc;" onclick="setHex('c-box', 'transparent')"></span>
+                                <span class="swatch" style="background:#ffffff;" onclick="setHex('c-box', '#ffffff')"></span>
+                                <span class="swatch" style="background:#333333;" onclick="setHex('c-box', '#333333')"></span>
+                                <span class="swatch" style="background:#f9f7f2;" onclick="setHex('c-box', '#f9f7f2')"></span>
+                            </div>
+                            <input type="text" id="c-box" class="hex-input" value="transparent" oninput="updatePreview()">
+                        </div>
+                        <div class="color-row">
+                            <span class="color-title">小框</span>
+                            <div class="color-swatches">
+                                <span class="swatch" style="background:#ffffff;" onclick="setHex('c-item', '#ffffff')"></span>
+                                <span class="swatch" style="background:#333333;" onclick="setHex('c-item', '#333333')"></span>
+                                <span class="swatch" style="background:#f9f7f2;" onclick="setHex('c-item', '#f9f7f2')"></span>
+                                <span class="swatch" style="background:#eef0ed;" onclick="setHex('c-item', '#eef0ed')"></span>
+                            </div>
+                            <input type="text" id="c-item" class="hex-input" value="#f9f7f2" oninput="updatePreview()">
+                        </div>
+                        <div class="color-row">
+                            <span class="color-title">文案</span>
+                            <div class="color-swatches">
+                                <span class="swatch" style="background:#000000;" onclick="setHex('c-lbl', '#000000')"></span>
+                                <span class="swatch" style="background:#a5acaa;" onclick="setHex('c-lbl', '#a5acaa')"></span>
+                                <span class="swatch" style="background:#8da493;" onclick="setHex('c-lbl', '#8da493')"></span>
+                                <span class="swatch" style="background:#bca39f;" onclick="setHex('c-lbl', '#bca39f')"></span>
+                            </div>
+                            <input type="text" id="c-lbl" class="hex-input" value="#a5acaa" oninput="updatePreview()">
+                        </div>
+                        <div class="color-row">
+                            <span class="color-title">数值</span>
+                            <div class="color-swatches">
+                                <span class="swatch" style="background:#000000;" onclick="setHex('c-val', '#000000')"></span>
+                                <span class="swatch" style="background:#788583;" onclick="setHex('c-val', '#788583')"></span>
+                                <span class="swatch" style="background:#8da493;" onclick="setHex('c-val', '#8da493')"></span>
+                                <span class="swatch" style="background:#d9827c;" onclick="setHex('c-val', '#d9827c')"></span>
+                            </div>
+                            <input type="text" id="c-val" class="hex-input" value="#788583" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:none;">
+                    <input type="text" id="e-v-pv"><input type="text" id="e-v-uv"><input type="text" id="e-v-dpv"><input type="text" id="e-v-duv">
+                    <input type="checkbox" id="e-t-pv"><input type="checkbox" id="e-t-uv"><input type="checkbox" id="e-t-dpv"><input type="checkbox" id="e-t-duv">
                 </div>
             </div>
         </div>
@@ -251,7 +294,7 @@
     </div>
     
     <div class="edit-nav-bar" id="edit-nav-bar" style="display:none;">
-        <div class="edit-nav-item" onclick="promptSave()"><span class="icon">💾</span>保存修改</div>
+        <div class="edit-nav-item" onclick="promptSave()" id="btn-save-edit" style="opacity:0.5; pointer-events:none;"><span class="icon">💾</span>保存修改</div>
         <div class="edit-nav-item" onclick="genLinkFromEdit()"><span class="icon">🔗</span>获取代码</div>
         <div class="edit-nav-item danger" onclick="confirmDeleteFromEdit()"><span class="icon">🗑️</span>删除网站</div>
     </div>
@@ -271,6 +314,7 @@
         let isEditOpen = false;
         let sysHasPwd = false;
         let currentOrder = [];
+        let currentOriginalConfigStr = "";
         
         const keyMap = { pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客' };
         const tplDict = {
@@ -295,6 +339,10 @@
             19: { box: 'transparent', bg: '#fff5ee', border: '#ffdab9', val: '#ff4500', lbl: '#ffa07a' },
             20: { box: 'transparent', bg: '#ffffff', border: '#000000', val: '#000000', lbl: '#000000' }
         };
+
+        window.addEventListener('popstate', (e) => {
+            if (isEditOpen) closeEdit(true);
+        });
 
         function showToast(msg, ms=1500) {
             const t = document.getElementById('toast');
@@ -440,7 +488,7 @@
                 const card = document.createElement('div');
                 card.className = 'site-card';
                 card.onclick = function() { openEdit(site); };
-                card.innerHTML = `<div><div class="site-domain" style="margin-bottom:0;">${site}</div><div class="site-alias">${cName !== site ? '预设: '+cName : ''}</div></div><div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>`;
+                card.innerHTML = `<div><div class="site-domain" style="margin-bottom:0;">${site}</div><div class="site-alias">${cName !== site ? '已存: '+cName : ''}</div></div><div style="color:var(--primary); font-size:20px; font-weight:bold;">›</div>`;
                 list.appendChild(card);
             }
             if (Object.keys(configs).length === 0) list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">还没有添加网站<br>点击右下角按钮添加</div>';
@@ -485,7 +533,7 @@
             configs[site] = { 
                 configName: site,
                 tpl: 1, scale: 1, offsetX: 0, layout: 'row', 
-                padBox: 0.6, padItem: 0.6,
+                padBox: 0.6, padItemX: 0.8, padItemY: 0.6,
                 useCustom: false, colors: { box: 'transparent', item: '#f9f7f2', lbl: '#a5acaa', val: '#788583' },
                 order: ['pv','uv','dpv','duv'], pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} 
             };
@@ -494,18 +542,22 @@
             openEdit(site);
         }
 
+        function setHex(id, hex) {
+            document.getElementById(id).value = hex;
+            updatePreview();
+        }
+
         function renderSortList() {
             const list = document.getElementById('sort-list');
             list.innerHTML = '';
             currentOrder.forEach((k, idx) => {
                 const isChecked = document.getElementById(`e-t-${k}`).checked;
-                const vNode = document.getElementById(`e-v-${k}`);
-                const val = vNode ? vNode.value : keyMap[k];
+                const val = document.getElementById(`e-v-${k}`).value;
                 list.innerHTML += `
                 <div class="sort-item" style="opacity:${isChecked?1:0.5};">
-                    <label style="display:flex; align-items:center; gap:8px;" for="ls-t-${k}">
+                    <label style="display:flex; align-items:center; gap:4px;" for="ls-t-${k}">
                         <input type="checkbox" id="ls-t-${k}" ${isChecked?'checked':''} onchange="syncShows('${k}')">
-                        <input type="text" class="inline-name" value="${val}" oninput="syncName('${k}', this.value)" placeholder="展示文字">
+                        <input type="text" class="inline-name" value="${val}" oninput="syncName('${k}', this.value)" placeholder="文案">
                     </label>
                     <div class="sort-btns">
                         <span style="cursor:pointer; opacity:${idx===0?0.2:1};" onclick="moveOrder(${idx}, -1)">▲</span>
@@ -536,7 +588,7 @@
 
         function updatePreview() {
             const useCustom = document.getElementById('e-use-custom').checked;
-            document.getElementById('custom-color-panel').style.display = useCustom ? 'grid' : 'none';
+            document.getElementById('custom-color-panel').style.display = useCustom ? 'flex' : 'none';
             
             let t;
             if (useCustom) {
@@ -557,7 +609,8 @@
             const baseSize = 14 * scale;
             
             const pb = document.getElementById('e-pad-box').value;
-            const pi = document.getElementById('e-pad-item').value;
+            const px = document.getElementById('e-pad-item-x').value;
+            const py = document.getElementById('e-pad-item-y').value;
             
             const layoutNode = document.querySelector('input[name="e-layout"]:checked');
             const isGrid = layoutNode && layoutNode.value === 'grid';
@@ -567,12 +620,49 @@
             let items = [];
             currentOrder.forEach(k => {
                 if(document.getElementById(`e-t-${k}`).checked) {
-                    items.push(`<div style="flex: 0 0 ${isGrid?'calc(50% - 4px)':'auto'}; min-width:50px; background:${t.bg}; padding:${pi}em ${pi*1.2}em; border-radius:${pi}em; border:1px solid ${t.border}; box-sizing:border-box; text-align:center;"><div style="font-size:0.75em; color:${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${names[k]}</div><div style="font-size:1.15em; color:${t.val}; font-weight:600;">888</div></div>`);
+                    items.push(`<div style="flex: 0 0 ${isGrid?'calc(50% - 4px)':'auto'}; min-width:50px; background:${t.bg}; padding:${py}em ${px}em; border-radius:${py}em; border:1px solid ${t.border}; box-sizing:border-box; text-align:center;"><div style="font-size:0.75em; color:${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${names[k]}</div><div style="font-size:1.15em; color:${t.val}; font-weight:600;">888</div></div>`);
                 }
             });
 
             const paddingBox = t.box && t.box !== 'transparent' ? `padding:${pb}em; border-radius:${pb*1.2}em;` : '';
             document.getElementById('live-preview-container').innerHTML = `<div style="display:flex; justify-content:center; width:100%;"><div style="display:flex; flex-wrap:${isGrid?'wrap':'nowrap'}; gap:8px; justify-content:center; background:${t.box}; ${paddingBox} transform:translateX(${offsetX}%); font-family:-apple-system,sans-serif; font-size:${baseSize}px; line-height:1; width:max-content; max-width:100%; box-sizing:border-box;">${items.join('')}</div></div>`;
+            checkChanges();
+        }
+
+        function checkChanges() {
+            const site = document.getElementById('e-site-id').value;
+            if (!configs[site]) return;
+
+            const layoutNode = document.querySelector('input[name="e-layout"]:checked');
+            const currObj = {
+                tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
+                scale: parseFloat(document.getElementById('e-scale').value) || 1,
+                offsetX: parseInt(document.getElementById('e-offset').value) || 0,
+                padBox: parseFloat(document.getElementById('e-pad-box').value) || 0.6,
+                padItemX: parseFloat(document.getElementById('e-pad-item-x').value) || 0.8,
+                padItemY: parseFloat(document.getElementById('e-pad-item-y').value) || 0.6,
+                layout: layoutNode ? layoutNode.value : 'row',
+                useCustom: document.getElementById('e-use-custom').checked,
+                colors: { box: document.getElementById('c-box').value, item: document.getElementById('c-item').value, lbl: document.getElementById('c-lbl').value, val: document.getElementById('c-val').value },
+                order: currentOrder,
+                pv: document.getElementById('e-v-pv').value,
+                uv: document.getElementById('e-v-uv').value,
+                dpv: document.getElementById('e-v-dpv').value,
+                duv: document.getElementById('e-v-duv').value,
+                shows: {
+                    pv: document.getElementById('e-t-pv').checked,
+                    uv: document.getElementById('e-t-uv').checked,
+                    dpv: document.getElementById('e-t-dpv').checked,
+                    duv: document.getElementById('e-t-duv').checked
+                }
+            };
+            
+            const btn = document.getElementById('btn-save-edit');
+            if (JSON.stringify(currObj) !== currentOriginalConfigStr) {
+                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+            } else {
+                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none';
+            }
         }
 
         function openEdit(site) {
@@ -583,13 +673,6 @@
                 currentOrder = Array.isArray(c.order) ? [...c.order] : ['pv','uv','dpv','duv'];
                 const shows = c.shows || {pv:true, uv:true, dpv:true, duv:true};
                 
-                if(!document.getElementById('e-t-pv')) {
-                    const hiddenDiv = document.createElement('div');
-                    hiddenDiv.style.display = 'none';
-                    hiddenDiv.innerHTML = `<input type="checkbox" id="e-t-pv"><input type="checkbox" id="e-t-uv"><input type="checkbox" id="e-t-dpv"><input type="checkbox" id="e-t-duv"><input type="text" id="e-v-pv"><input type="text" id="e-v-uv"><input type="text" id="e-v-dpv"><input type="text" id="e-v-duv">`;
-                    document.body.appendChild(hiddenDiv);
-                }
-
                 document.getElementById('e-t-pv').checked = !!shows.pv;
                 document.getElementById('e-t-uv').checked = !!shows.uv;
                 document.getElementById('e-t-dpv').checked = !!shows.dpv;
@@ -598,19 +681,16 @@
                 document.getElementById('e-offset').value = c.offsetX || 0;
                 document.getElementById('e-scale').value = c.scale || 1;
                 document.getElementById('e-pad-box').value = c.padBox !== undefined ? c.padBox : 0.6;
-                document.getElementById('e-pad-item').value = c.padItem !== undefined ? c.padItem : 0.6;
+                document.getElementById('e-pad-item-x').value = c.padItemX !== undefined ? c.padItemX : 0.8;
+                document.getElementById('e-pad-item-y').value = c.padItemY !== undefined ? c.padItemY : 0.6;
                 document.getElementById('e-tpl-select').value = c.tpl || 1;
                 
                 document.getElementById('e-use-custom').checked = !!c.useCustom;
                 const colors = c.colors || { box: 'transparent', item: '#f9f7f2', lbl: '#a5acaa', val: '#788583' };
-                document.getElementById('c-box').value = colors.box !== 'transparent' ? colors.box : '#ffffff';
+                document.getElementById('c-box').value = colors.box;
                 document.getElementById('c-item').value = colors.item;
                 document.getElementById('c-lbl').value = colors.lbl;
                 document.getElementById('c-val').value = colors.val;
-                document.getElementById('t-c-box').value = document.getElementById('c-box').value;
-                document.getElementById('t-c-item').value = colors.item;
-                document.getElementById('t-c-lbl').value = colors.lbl;
-                document.getElementById('t-c-val').value = colors.val;
 
                 const layoutRadios = document.getElementsByName('e-layout');
                 for(let r of layoutRadios) { if(r.value === (c.layout || 'row')) r.checked = true; }
@@ -621,6 +701,27 @@
                 document.getElementById('e-v-duv').value = c.duv || '今日访客';
 
                 renderSortList();
+                
+                const currentLayoutNode = document.querySelector('input[name="e-layout"]:checked');
+                const currObj = {
+                    tpl: parseInt(document.getElementById('e-tpl-select').value) || 1,
+                    scale: parseFloat(document.getElementById('e-scale').value) || 1,
+                    offsetX: parseInt(document.getElementById('e-offset').value) || 0,
+                    padBox: parseFloat(document.getElementById('e-pad-box').value) || 0.6,
+                    padItemX: parseFloat(document.getElementById('e-pad-item-x').value) || 0.8,
+                    padItemY: parseFloat(document.getElementById('e-pad-item-y').value) || 0.6,
+                    layout: currentLayoutNode ? currentLayoutNode.value : 'row',
+                    useCustom: !!c.useCustom,
+                    colors: colors,
+                    order: currentOrder,
+                    pv: document.getElementById('e-v-pv').value,
+                    uv: document.getElementById('e-v-uv').value,
+                    dpv: document.getElementById('e-v-dpv').value,
+                    duv: document.getElementById('e-v-duv').value,
+                    shows: { pv: !!shows.pv, uv: !!shows.uv, dpv: !!shows.dpv, duv: !!shows.duv }
+                };
+                currentOriginalConfigStr = JSON.stringify(currObj);
+                checkChanges();
 
                 document.getElementById('btn-back').style.display = 'flex';
                 document.getElementById('fab-add').style.display = 'none';
@@ -628,6 +729,7 @@
                 document.getElementById('edit-nav-bar').style.display = 'flex';
                 document.getElementById('view-edit').classList.add('show');
                 isEditOpen = true;
+                try { history.pushState({view: 'edit'}, ''); } catch(e) {}
             } catch (e) {
                 showToast('读取配置失败');
             }
@@ -637,7 +739,7 @@
             const site = document.getElementById('e-site-id').value;
             const c = configs[site] || {};
             const cName = c.configName || site;
-            openModal('保存配置', `<div class="label" style="text-align:left;">为当前配置命名留存：</div><input type="text" id="save-config-name" value="${cName}" style="width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; margin-bottom:10px;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="executeSave()">确认保存</button>`);
+            openModal('保存配置', `<div class="label" style="text-align:left;">为当前配置命名留存：</div><input type="text" id="save-config-name" value="${cName}" style="width:100%; height:48px; border:1px solid var(--border); border-radius:12px; padding:0 16px; outline:none; margin-bottom:10px;">`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="executeSave()">确认</button>`);
         }
 
         async function executeSave() {
@@ -651,7 +753,8 @@
                 scale: parseFloat(document.getElementById('e-scale').value),
                 offsetX: parseInt(document.getElementById('e-offset').value),
                 padBox: parseFloat(document.getElementById('e-pad-box').value),
-                padItem: parseFloat(document.getElementById('e-pad-item').value),
+                padItemX: parseFloat(document.getElementById('e-pad-item-x').value),
+                padItemY: parseFloat(document.getElementById('e-pad-item-y').value),
                 layout: layoutNode ? layoutNode.value : 'row',
                 useCustom: document.getElementById('e-use-custom').checked,
                 colors: { box: document.getElementById('c-box').value, item: document.getElementById('c-item').value, lbl: document.getElementById('c-lbl').value, val: document.getElementById('c-val').value },
@@ -670,13 +773,15 @@
             
             showToast('保存中...');
             await fetch('/stats?action=save_config', { method: 'POST', body: JSON.stringify({site: site, ...configs[site]}) });
+            currentOriginalConfigStr = JSON.stringify({ tpl: configs[site].tpl, scale: configs[site].scale, offsetX: configs[site].offsetX, padBox: configs[site].padBox, padItemX: configs[site].padItemX, padItemY: configs[site].padItemY, layout: configs[site].layout, useCustom: configs[site].useCustom, colors: configs[site].colors, order: configs[site].order, pv: configs[site].pv, uv: configs[site].uv, dpv: configs[site].dpv, duv: configs[site].duv, shows: configs[site].shows });
+            checkChanges();
             renderSites();
             showToast('保存成功');
         }
 
         function handleBackBtn() { closeEdit(); }
 
-        function closeEdit() {
+        function closeEdit(fromPop = false) {
             document.getElementById('view-edit').classList.remove('show');
             document.getElementById('btn-back').style.display = 'none';
             document.getElementById('fab-add').style.display = 'flex';
@@ -687,7 +792,7 @@
 
         function confirmDeleteFromEdit() {
             const site = document.getElementById('e-site-id').value;
-            openModal('确认删除', `删除 <b>${site}</b> ？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;cursor:pointer;"><input type="checkbox" id="del-erase-data" checked> 同时清除历史统计数据</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">删除</button>`);
+            openModal('确认删除', `删除 <b>${site}</b> ？<br><label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;cursor:pointer;"><input type="checkbox" id="del-erase-data" checked> 同时清除历史统计</label>`, `<button class="btn btn-outline" onclick="closeModal()">取消</button><button class="btn btn-danger" onclick="doDelete('${site}')">删除</button>`);
         }
 
         async function doDelete(site) {
