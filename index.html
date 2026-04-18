@@ -6,30 +6,30 @@
     <title>网站统计管理</title>
     <style>
         :root {
-            --bg: #f7f5f0;
-            --card: #ffffff;
-            --text-m: #4a4a4a;
-            --text-l: #9b9b9b;
-            --primary: #8da493;
-            --border: #e8e6df;
-            --danger: #d9827c;
+            --bg: #f7f5f0; --card: #ffffff; --text-m: #4a4a4a; --text-l: #9b9b9b;
+            --primary: #8da493; --border: #e8e6df; --danger: #d9827c;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background-color: var(--bg); color: var(--text-m); overflow: hidden; height: 100vh; }
         
+        /* 顶部导航 */
         .header { background: var(--card); height: calc(54px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--border); position: relative; z-index: 20; }
         .header .btn-back { position: absolute; left: 16px; bottom: 0; height: 54px; display: flex; align-items: center; font-size: 15px; color: var(--primary); display: none; cursor: pointer; font-weight: 500; }
         
+        /* 滚动容器架构修复 */
         .view-container { position: relative; height: calc(100vh - 54px - env(safe-area-inset-top)); overflow: hidden; }
-        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 20px calc(90px + env(safe-area-inset-bottom)) 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
         .view.active { opacity: 1; pointer-events: auto; }
         
+        /* 编辑页专属滚动修复（大幅增加底部留白防遮挡） */
         #view-edit { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); background: var(--bg); z-index: 30; opacity: 1; pointer-events: auto; }
         #view-edit.show { transform: translateX(0); }
+        .edit-scroll-box { padding-bottom: 180px; } /* 确保划到底部能看到复制和删除按钮 */
         
         #view-login { z-index: 50; background: var(--bg); display: flex; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
+        /* 底部切换栏 */
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); }
         .nav-item { text-align: center; color: var(--text-l); font-size: 11px; flex: 1; padding: 8px 0; cursor: pointer; transition: 0.2s; }
         .nav-item.active { color: var(--primary); font-weight: 600; }
@@ -61,14 +61,14 @@
         .toggle-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-m); }
         input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
 
-        .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .btn { width: 100%; height: 50px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; }
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(141, 164, 147, 0.3); }
         .btn-danger { background: #ffffff; color: var(--danger); border: 1px solid var(--danger); }
         .btn-outline { background: var(--card); border: 1px solid var(--border); color: var(--text-m); }
         .btn:active { transform: scale(0.96); }
         .action-row { display: flex; gap: 12px; margin-top: 16px; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); display: none; justify-content: center; align-items: center; z-index: 100; padding: 20px; }
         .modal { background: var(--card); width: 100%; max-width: 340px; border-radius: 20px; padding: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); transform: scale(0.9); opacity: 0; transition: 0.2s; }
         .modal.show { transform: scale(1); opacity: 1; }
         .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; text-align: center; }
@@ -91,7 +91,7 @@
         <div class="card" style="width:100%; max-width:340px;">
             <div class="card-header" style="text-align:center; font-size:20px;">系统登录</div>
             <div class="form-group"><input type="password" id="login-pwd" placeholder="请输入系统访问密码"></div>
-            <div class="form-group toggle-item" style="justify-content:center;">
+            <div class="form-group toggle-item" style="justify-content:center; margin-bottom:20px;">
                 <input type="checkbox" id="login-rem" checked> <label for="login-rem">记住密码，下次自动登录</label>
             </div>
             <button class="btn btn-primary" onclick="doLogin()">进入系统</button>
@@ -100,16 +100,14 @@
 
     <div class="view-container" id="main-container" style="display:none;">
         
-        <div id="tab-site" class="view active">
+        <div id="tab-site" class="view active" style="padding-bottom:120px;">
             <div id="site-list"></div>
         </div>
         <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
 
-        <div id="tab-stat" class="view">
+        <div id="tab-stat" class="view" style="padding-bottom:120px;">
             <div class="card" style="padding:15px; background:var(--primary); color:white; border:none;">
-                <div style="font-size:16px; font-weight:600; margin-bottom:15px; display:flex; justify-content:space-between;">
-                    <span>全站数据汇总</span><span>👑</span>
-                </div>
+                <div style="font-size:16px; font-weight:600; margin-bottom:15px;">全站数据汇总</div>
                 <div class="stat-grid">
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问量</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客数</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
@@ -121,22 +119,29 @@
             <div id="stat-detail-list"></div>
         </div>
 
-        <div id="tab-sys" class="view">
+        <div id="tab-sys" class="view" style="padding-bottom:120px;">
             <div class="card">
-                <div class="card-header">安全设置</div>
+                <div class="card-header">安全与访问</div>
                 <div class="form-group">
-                    <div class="label">修改后台访问密码（留空表示无密码）</div>
-                    <input type="text" id="sys-pwd" placeholder="设置新密码">
+                    <div class="label">修改后台访问密码 (留空即无密码)</div>
+                    <input type="text" id="sys-pwd" placeholder="输入新密码">
                 </div>
-                <button class="btn btn-primary" onclick="saveSysConfig()">保存设置</button>
+                <div class="form-group toggle-item" id="sec-rem-pwd" style="display:none; justify-content:space-between; margin-bottom:20px;">
+                    <label for="sys-rem-checkbox">在本机记住密码，免密登录</label>
+                    <input type="checkbox" id="sys-rem-checkbox" checked>
+                </div>
+                <button class="btn btn-primary" onclick="saveSysConfig()">保存安全设置</button>
+                <button class="btn btn-outline" id="sec-logout" style="display:none; margin-top:12px; color:var(--danger); border-color:var(--danger);" onclick="logout()">退出当前登录</button>
             </div>
             <div class="card">
-                <button class="btn btn-outline" style="color:var(--danger);" onclick="logout()">退出登录</button>
+                <div class="card-header" style="color:var(--danger);">危险操作</div>
+                <div style="font-size:13px; color:var(--text-l); margin-bottom:15px;">此操作将永久清空所有网站配置及系统密码。</div>
+                <button class="btn btn-danger" onclick="confirmClearAll()">清空系统所有数据</button>
             </div>
         </div>
 
-        <div id="view-edit">
-            <div style="padding: 20px;">
+        <div id="view-edit" class="view">
+            <div class="edit-scroll-box">
                 <input type="hidden" id="e-site-id">
                 
                 <div class="label">选择显示的模块</div>
@@ -148,7 +153,7 @@
                 </div>
 
                 <div class="form-group">
-                    <div class="label">对齐与大小</div>
+                    <div class="label">对齐方式与尺寸大小</div>
                     <div style="display:flex; gap:12px;">
                         <select id="e-align" class="native-select" style="flex:1;">
                             <option value="left">居左对齐</option>
@@ -164,15 +169,14 @@
                 </div>
 
                 <div class="form-group">
-                    <div class="label">选择主题颜色</div>
+                    <div class="label">选择展现模板</div>
                     <select id="e-tpl-select" class="native-select">
-                        <option value="1">模板 1 (燕麦色)</option>
-                        <option value="2">模板 2 (纯白色)</option>
-                        <option value="3">模板 3 (灰绿色)</option>
-                        <option value="4">模板 4 (藕荷色)</option>
-                        <option value="5">模板 5 (灰蓝色)</option>
-                        <option value="6">模板 6 (极夜深黑)</option>
-                        <option value="10">模板 10 (透明无边框)</option>
+                        <option value="1">模板 1</option>
+                        <option value="3">模板 3</option>
+                        <option value="4">模板 4</option>
+                        <option value="5">模板 5</option>
+                        <option value="6">模板 6</option>
+                        <option value="10">模板 10</option>
                     </select>
                 </div>
 
@@ -217,19 +221,15 @@
         let configs = {};
         let isEditOpen = false;
         let isModalOpen = false;
+        let sysHasPwd = false; // 全局密码状态
 
         const tabTitles = { site: '网站管理', stat: '统计概览', sys: '系统设置' };
 
-        // --- 路由与侧滑逻辑 (History API) ---
         window.addEventListener('popstate', (e) => {
-            if (isModalOpen) {
-                closeModal(true);
-            } else if (isEditOpen) {
-                closeEdit(true);
-            }
+            if (isModalOpen) closeModal(true);
+            else if (isEditOpen) closeEdit(true);
         });
 
-        // --- UI 组件 ---
         function showToast(msg, ms=1500) {
             const t = document.getElementById('toast');
             t.innerText = msg;
@@ -259,7 +259,6 @@
             if(!fromPop) history.back();
         }
 
-        // --- 导航与视图 ---
         function switchTab(tab) {
             document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
@@ -274,12 +273,24 @@
             if(tab === 'stat') loadAllStats();
         }
 
-        // --- 系统鉴权逻辑 ---
+        // --- 鉴权与设置 UI 动态处理 ---
+        function updateSysUI() {
+            if (sysHasPwd) {
+                document.getElementById('sec-rem-pwd').style.display = 'flex';
+                document.getElementById('sec-logout').style.display = 'flex';
+            } else {
+                document.getElementById('sec-rem-pwd').style.display = 'none';
+                document.getElementById('sec-logout').style.display = 'none';
+            }
+        }
+
         async function bootSys() {
             const res = await fetch('/stats?action=get_sys');
             const data = await res.json();
+            sysHasPwd = data.has_pwd;
+            updateSysUI();
             
-            if (data.has_pwd) {
+            if (sysHasPwd) {
                 const savedPwd = localStorage.getItem('sys_pwd');
                 if (savedPwd) {
                     const lRes = await fetch('/stats?action=login', { method: 'POST', body: JSON.stringify({pwd: savedPwd}) });
@@ -316,11 +327,39 @@
 
         async function saveSysConfig() {
             const pwd = document.getElementById('sys-pwd').value;
+            const rem = document.getElementById('sys-rem-checkbox').checked;
             showToast('正在保存...');
+            
             await fetch('/stats?action=save_sys', { method: 'POST', body: JSON.stringify({pwd}) });
-            if(pwd) localStorage.setItem('sys_pwd', pwd);
-            else localStorage.removeItem('sys_pwd');
-            showToast('设置已保存');
+            
+            if (pwd) {
+                sysHasPwd = true;
+                if (rem) localStorage.setItem('sys_pwd', pwd);
+                else localStorage.removeItem('sys_pwd');
+            } else {
+                sysHasPwd = false;
+                localStorage.removeItem('sys_pwd');
+            }
+            
+            updateSysUI();
+            showToast('安全设置已保存');
+        }
+
+        // --- 清空所有数据逻辑 ---
+        function confirmClearAll() {
+            openModal('警告：清空所有数据', 
+            `确定要清空系统内所有的网站配置和访问密码吗？<br><br>清空后你的所有网站探针将失效，且<b>无法恢复</b>！`, 
+            `<button class="btn btn-outline" onclick="closeModal()">取消</button>
+             <button class="btn btn-danger" onclick="doClearAll()">确认清空</button>`);
+        }
+
+        async function doClearAll() {
+            closeModal();
+            showToast('正在格式化...', 2000);
+            await fetch('/stats?action=clear_all', { method: 'POST' });
+            localStorage.removeItem('sys_pwd');
+            showToast('已清空所有数据，即将重启');
+            setTimeout(() => { location.reload(); }, 1000);
         }
 
         // --- 核心业务初始化 ---
@@ -331,7 +370,7 @@
             document.getElementById('nav-bar').style.display = 'flex';
             
             const list = document.getElementById('site-list');
-            list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:30px;">拉取配置中...</div>';
+            list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:30px;">获取数据中...</div>';
             
             const res = await fetch('/stats?action=get_configs');
             configs = await res.json();
@@ -354,7 +393,7 @@
                 </div>`;
             }
             if (Object.keys(configs).length === 0) {
-                list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">您还没有添加过网站<br>点击右下角按钮添加</div>';
+                list.innerHTML = '<div style="text-align:center; color:var(--text-l); margin-top:50px; line-height:1.8;">还没有添加网站<br>点击右下角按钮添加</div>';
             }
         }
 
@@ -372,9 +411,9 @@
             for (let site in data.sites) {
                 const s = data.sites[site];
                 html += `
-                <div class="card" style="padding:15px;">
+                <div class="card" style="padding:15px; margin-bottom:12px;">
                     <div style="font-weight:600; margin-bottom:10px;">${site}</div>
-                    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-m); border-bottom:1px solid var(--bg); padding-bottom:6px; margin-bottom:6px;">
+                    <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--text-m); border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px;">
                         <div>总访问: <b>${s.pv}</b></div><div>总访客: <b>${s.uv}</b></div>
                     </div>
                     <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--primary);">
@@ -388,7 +427,7 @@
 
         function showAddSiteModal() {
             openModal('添加新网站',
-                `<input type="text" id="new-site-input" placeholder="输入网站名称（如：blog）" style="margin-top:10px;">`,
+                `<input type="text" id="new-site-input" placeholder="输入网站名称" style="margin-top:10px;">`,
                 `<button class="btn btn-outline" onclick="closeModal()">取消</button>
                  <button class="btn btn-primary" onclick="confirmAddSite()">确认添加</button>`
             );
@@ -442,7 +481,7 @@
 
         function handleBackBtn() {
             if (isEditOpen) {
-                history.back(); // Trigger popstate
+                history.back(); 
             }
         }
 
@@ -486,7 +525,7 @@
         function confirmDeleteFromEdit() {
             const site = document.getElementById('e-site-id').value;
             openModal('确认删除', 
-            `确定要删除 <b>${site}</b> 吗？<br><br>删除后不可恢复，原有的代码也将失效。`, 
+            `确定要删除网站 <b>${site}</b> 吗？<br><br>删除后不可恢复，原有的统计代码将马上失效。`, 
             `<button class="btn btn-outline" onclick="closeModal()">取消</button>
              <button class="btn btn-danger" onclick="doDelete('${site}')">确认删除</button>`);
         }
@@ -498,7 +537,7 @@
             await fetch('/stats?action=delete_site', { method: 'POST', body: JSON.stringify({site})});
             renderSites();
             closeEdit();
-            showToast('已删除');
+            showToast('已成功删除');
         }
 
         function genLinkFromEdit() {
@@ -509,7 +548,7 @@
                 const escCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 openModal('专属统计代码', 
                 `<div class="code-preview">${escCode}</div>
-                 <div class="code-tip">复制上方代码并粘贴到网站 HTML 内部</div>`,
+                 <div class="code-tip">复制上方代码并粘贴到网站 HTML 内部即可</div>`,
                 `<button class="btn btn-outline" onclick="closeModal()">关闭</button>
                  <button class="btn btn-primary" onclick="copyCode('${site}')">复制完整代码</button>`);
             }, 800);
