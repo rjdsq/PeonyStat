@@ -70,21 +70,30 @@ export async function onRequest(context) {
     }
 
     if (action === 'script') {
-        const conf = allConfigs[site] || { tpl: 1, size: 1, align: 'center', pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', shows: {pv:true, uv:true, dpv:true, duv:true} };
+        const conf = allConfigs[site] || { 
+            tpl: 1, scale: 1, align: 'center', layout: 'row', 
+            order: ['pv', 'uv', 'dpv', 'duv'],
+            pv: '总访问', uv: '总访客', dpv: '今日访问', duv: '今日访客', 
+            shows: {pv:true, uv:true, dpv:true, duv:true} 
+        };
         
         const templates = {
             1: { bg: '#f9f7f2', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' },
+            2: { bg: '#ffffff', border: '#f4f1eb', val: '#5c5c5c', lbl: '#a0b5a6' },
             3: { bg: '#eef0ed', border: '#eef0ed', val: '#8da493', lbl: '#788583' },
             4: { bg: '#f5f0ef', border: '#ece5e3', val: '#bca39f', lbl: '#a5acaa' },
             5: { bg: '#f2f5f6', border: '#e8edf0', val: '#7f93a1', lbl: '#a5acaa' },
             6: { bg: '#fafafa', border: '#333333', val: '#333333', lbl: '#666666' },
-            10: { bg: 'transparent', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' },
-            11: { bg: '#1a1a1a', border: '#33ff00', val: '#33ff00', lbl: '#00cc00' },
-            12: { bg: '#000000', border: '#4af626', val: '#4af626', lbl: '#28a745' },
-            13: { bg: '#f3ece7', border: '#dccdc3', val: '#5c4033', lbl: '#8b7355' },
-            14: { bg: '#0b1d3a', border: '#1e3f66', val: '#82b1ff', lbl: '#4a7abc' },
+            7: { bg: '#333333', border: '#333333', val: '#f9f7f2', lbl: '#a5acaa' },
+            8: { bg: '#f9f9f9', border: '#d0b8b4', val: '#d0b8b4', lbl: '#a5acaa' },
+            9: { bg: '#ffffff', border: '#a0b5a6', val: '#a0b5a6', lbl: '#a5acaa' },
+            10: { bg: 'transparent', border: 'transparent', val: '#788583', lbl: '#a5acaa' },
+            11: { bg: '#121212', border: '#00ffcc', val: '#00ffcc', lbl: '#009999' },
+            12: { bg: '#000000', border: '#39ff14', val: '#39ff14', lbl: '#228b22' },
+            13: { bg: '#f4ece6', border: '#e2d3c8', val: '#5c4033', lbl: '#8b7355' },
+            14: { bg: '#0a192f', border: '#172a45', val: '#64ffda', lbl: '#8892b0' },
             15: { bg: '#fff0e6', border: '#ffdcb3', val: '#ff7f50', lbl: '#ff9966' },
-            16: { bg: '#1e3323', border: '#2d4c34', val: '#a8d5ba', lbl: '#7eb08c' },
+            16: { bg: '#1b2a22', border: '#253e30', val: '#a8d5ba', lbl: '#7eb08c' },
             17: { bg: '#fff0f5', border: '#ffb6c1', val: '#ff69b4', lbl: '#ffc0cb' },
             18: { bg: '#f8f8ff', border: '#e6e6fa', val: '#9370db', lbl: '#b0c4de' },
             19: { bg: '#fff5ee', border: '#ffdab9', val: '#ff4500', lbl: '#ffa07a' },
@@ -92,15 +101,15 @@ export async function onRequest(context) {
         };
         const t = templates[conf.tpl || 1] || templates[1];
 
-        const sizes = {
-            1: { p: '8px 12px', v: '14px', l: '10px' },
-            2: { p: '12px 16px', v: '18px', l: '11px' },
-            3: { p: '16px 20px', v: '22px', l: '12px' }
-        };
-        const s = sizes[conf.size || 1] || sizes[1];
-
         const aligns = { left: 'flex-start', center: 'center', right: 'flex-end' };
         const jc = aligns[conf.align || 'center'] || 'center';
+        
+        const scale = conf.scale || 1;
+        const baseSize = 14 * scale; 
+        
+        const isGrid = conf.layout === 'grid';
+        const itemWidth = isGrid ? 'calc(50% - 6px)' : 'auto';
+        const flexWrap = isGrid ? 'wrap' : 'nowrap';
 
         const trackerJs = `
         (async function() {
@@ -113,13 +122,19 @@ export async function onRequest(context) {
                 resData = await response.json();
             } catch(e) { return; }
 
+            const confShows = ${JSON.stringify(conf.shows)};
+            const confNames = {pv: '${conf.pv}', uv: '${conf.uv}', dpv: '${conf.dpv}', duv: '${conf.duv}'};
+            const orderArr = ${JSON.stringify(conf.order || ['pv', 'uv', 'dpv', 'duv'])};
+            
             let items = [];
-            if(${conf.shows.pv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:${s.p}; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:${s.l}; color:${t.lbl}; margin-bottom:4px;">${conf.pv}</div><div style="font-size:${s.v}; color:${t.val}; font-weight:600;">\${resData.pv}</div></div>\`);
-            if(${conf.shows.uv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:${s.p}; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:${s.l}; color:${t.lbl}; margin-bottom:4px;">${conf.uv}</div><div style="font-size:${s.v}; color:${t.val}; font-weight:600;">\${resData.uv}</div></div>\`);
-            if(${conf.shows.dpv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:${s.p}; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:${s.l}; color:${t.lbl}; margin-bottom:4px;">${conf.dpv}</div><div style="font-size:${s.v}; color:${t.val}; font-weight:600;">\${resData.dpv}</div></div>\`);
-            if(${conf.shows.duv}) items.push(\`<div style="flex:1; min-width:60px; background:${t.bg}; padding:${s.p}; border-radius:10px; border:1px solid ${t.border};"><div style="font-size:${s.l}; color:${t.lbl}; margin-bottom:4px;">${conf.duv}</div><div style="font-size:${s.v}; color:${t.val}; font-weight:600;">\${resData.duv}</div></div>\`);
+            for (let i = 0; i < orderArr.length; i++) {
+                const key = orderArr[i];
+                if (confShows[key]) {
+                    items.push(\`<div style="flex: 1 1 \${'${itemWidth}'}; min-width:40px; background:${t.bg}; padding:0.6em 0.8em; border-radius:0.6em; border:1px solid ${t.border}; box-sizing:border-box;"><div style="font-size:0.75em; color:${t.lbl}; margin-bottom:0.3em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">\${confNames[key]}</div><div style="font-size:1.15em; color:${t.val}; font-weight:600;">\${resData[key]}</div></div>\`);
+                }
+            }
 
-            container.innerHTML = \`<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:${jc}; text-align:center; font-family:-apple-system,sans-serif;">\${items.join('')}</div>\`;
+            container.innerHTML = \`<div style="display:flex; flex-wrap:${flexWrap}; gap:8px; justify-content:${jc}; text-align:center; font-family:-apple-system,sans-serif; font-size:\${${baseSize}}px; line-height:1;">\${items.join('')}</div>\`;
         })();`;
         return new Response(trackerJs, { headers: { "Content-Type": "application/javascript", ...corsHeaders } });
     }
