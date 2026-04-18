@@ -3,32 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>回忆录统计中心</title>
+    <title>回忆录数据中心 | 专业版</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background-color: #f4f1eb; color: #5c5c5c; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%; max-width: 500px; }
-        h2 { color: #788583; font-weight: 500; text-align: center; margin-bottom: 30px; }
-        .preview { display: flex; justify-content: space-around; background: #f9f7f2; border-radius: 12px; padding: 20px; margin-bottom: 30px; border: 1px solid #ece9e0; }
-        .stat-item { text-align: center; }
-        .label { font-size: 12px; color: #a5acaa; margin-bottom: 5px; }
-        .value { font-size: 20px; color: #788583; font-weight: 600; }
-        .code-box { background: #fafafa; border: 1px dashed #d0b8b4; border-radius: 8px; padding: 15px; position: relative; }
+        body { font-family: -apple-system, "PingFang SC", sans-serif; background-color: #f4f1eb; color: #5c5c5c; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%; max-width: 580px; }
+        h2 { color: #788583; font-weight: 500; text-align: center; margin-bottom: 30px; letter-spacing: 1px; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+        .card { background: #f9f7f2; border: 1px solid #ece9e0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .card.geo { grid-column: span 2; flex-direction: row; justify-content: space-between; background: #f3f6f4; border-color: #e2e8e4; }
+        .label { font-size: 12px; color: #a5acaa; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .value { font-size: 24px; color: #788583; font-weight: 600; }
+        .code-box { background: #fafafa; border: 1px dashed #d0b8b4; border-radius: 8px; padding: 15px; position: relative; margin-bottom: 20px; }
         code { font-family: monospace; font-size: 13px; color: #8da493; word-break: break-all; }
-        .copy-btn { margin-top: 15px; width: 100%; padding: 12px; background: #a0b5a6; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .copy-btn:hover { background: #8da493; }
+        .copy-btn { width: 100%; padding: 14px; background: #a0b5a6; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 15px; font-weight: 500; }
+        .copy-btn:hover { background: #8da493; transform: translateY(-1px); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>统计插件配置</h2>
-        <div class="preview">
-            <div class="stat-item"><div class="label">流年足迹</div><div class="value" id="total">...</div></div>
-            <div class="stat-item"><div class="label">今日偶遇</div><div class="value" id="today">...</div></div>
+        <h2>全息统计终端</h2>
+        <div class="grid">
+            <div class="card"><div class="label">流年阅历 (Total PV)</div><div class="value" id="t-pv">-</div></div>
+            <div class="card"><div class="label">独立灵魂 (Total UV)</div><div class="value" id="t-uv">-</div></div>
+            <div class="card"><div class="label">今日足迹 (Today PV)</div><div class="value" id="d-pv">-</div></div>
+            <div class="card"><div class="label">今日新客 (Today UV)</div><div class="value" id="d-uv">-</div></div>
+            <div class="card geo">
+                <div class="label" style="margin-bottom:0;">最新远方来客</div>
+                <div class="value" id="l-geo" style="font-size:16px; color:#a0b5a6;">-</div>
+            </div>
         </div>
         <div class="code-box">
-            <code id="code-snippet">正在生成...</code>
+            <code id="code-snippet">加载中...</code>
         </div>
-        <button class="copy-btn" onclick="copyCode()">复制引用链接</button>
+        <button class="copy-btn" onclick="copyCode()">复制专业版引用链接</button>
     </div>
     <script>
         const apiUrl = window.location.origin;
@@ -36,13 +43,15 @@
         document.getElementById('code-snippet').innerText = snippet;
 
         fetch('/stats').then(r => r.json()).then(data => {
-            document.getElementById('total').innerText = data.total;
-            document.getElementById('today').innerText = data.today;
+            document.getElementById('t-pv').innerText = data.total_pv;
+            document.getElementById('t-uv').innerText = data.total_uv;
+            document.getElementById('d-pv').innerText = data.today_pv;
+            document.getElementById('d-uv').innerText = data.today_uv;
+            document.getElementById('l-geo').innerText = data.last_geo;
         });
 
         function copyCode() {
             navigator.clipboard.writeText(snippet);
-            alert('代码已复制');
         }
     </script>
 </body>
