@@ -39,6 +39,12 @@ export async function onRequest(context) {
     let configStr = await env.RE_STAT.get(k_config);
     let allConfigs = configStr ? JSON.parse(configStr) : {};
 
+    if (action === 'clear_all' && request.method === 'POST') {
+        await env.RE_STAT.put(k_config, JSON.stringify({}));
+        await env.RE_STAT.delete('sys_pwd');
+        return new Response(JSON.stringify({ status: "ok" }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
+    }
+
     if (action === 'get_configs') {
         return new Response(JSON.stringify(allConfigs), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
@@ -68,14 +74,10 @@ export async function onRequest(context) {
         
         const templates = {
             1: { bg: '#f9f7f2', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' },
-            2: { bg: '#ffffff', border: '#f4f1eb', val: '#5c5c5c', lbl: '#a0b5a6' },
             3: { bg: '#eef0ed', border: '#eef0ed', val: '#8da493', lbl: '#788583' },
             4: { bg: '#f5f0ef', border: '#ece5e3', val: '#bca39f', lbl: '#a5acaa' },
             5: { bg: '#f2f5f6', border: '#e8edf0', val: '#7f93a1', lbl: '#a5acaa' },
             6: { bg: '#fafafa', border: '#333333', val: '#333333', lbl: '#666666' },
-            7: { bg: '#333333', border: '#333333', val: '#f9f7f2', lbl: '#a5acaa' },
-            8: { bg: '#f9f9f9', border: '#d0b8b4', val: '#d0b8b4', lbl: '#a5acaa' },
-            9: { bg: '#ffffff', border: '#a0b5a6', val: '#a0b5a6', lbl: '#a5acaa' },
             10: { bg: 'transparent', border: '#ece9e0', val: '#788583', lbl: '#a5acaa' }
         };
         const t = templates[conf.tpl || 1] || templates[1];
