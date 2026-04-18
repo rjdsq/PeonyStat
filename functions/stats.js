@@ -1,91 +1,135 @@
 export async function onRequest(context) {
     const { request, env, waitUntil } = context;
     const url = new URL(request.url);
-    const isJsRequest = url.searchParams.has('js');
+    const action = url.searchParams.get('action');
 
-    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-    const country = request.cf?.country || '未知地域';
-    const city = request.cf?.city || country;
-    const geoText = city === country ? country : `${country} ${city}`;
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    };
 
+    if (request.method === "OPTIONS") {
+        return new Response(null, { headers: corsHeaders });
+    }
+
+    if (action === 'script') {
+        const trackerJs = `
+        (async function() {
+            const container = document.getElementById('cf-stat');
+            if (!container) return;
+
+            const siteId = container.getAttribute('data-site') || 'default';
+            const tpl = container.getAttribute('data-tpl') || 'text';
+            const shows = (container.getAttribute('data-show') || 'pv,uv,today').split(',');
+            
+            const txtPv = container.getAttribute('data-txt-pv') || '总访问量';
+            const txtUv = container.getAttribute('data-txt-uv') || '总访客';
+            const txtDpv = container.getAttribute('data-txt-dpv') || '今日访问';
+            const txtDuv = container.getAttribute('data-txt-duv') || '今日访客';
+
+            const payload = {
+                url: window.location.href,
+                ref: document.referrer,
+                ua: navigator.userAgent,
+                sw: window.screen.width
+            };
+
+            const apiUrl = '${url.origin}/stats?action=track&site=' + siteId;
+            let resData = {};
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                resData = await response.json();
+            } catch(e) { return; }
+
+            let html = '';
+            if (tpl === 'text') {
+                html = '<div style="font-size:13px; color:#788583;">';
+                if(shows.includes('pv')) html += \`<span>\${txtPv}: \${resData.pv}</span> | \`;
+                if(shows.includes('uv')) html += \`<span>\${txtUv}: \${resData.uv}</span> | \`;
+                if(shows.includes('dpv')) html += \`<span>\${txtDpv}: \${resData.dpv}</span> | \`;
+                if(shows.includes('duv')) html += \`<span>\${txtDuv}: \${resData.duv}</span>\`;
+                html = html.replace(/ \\| $/, '') + '</div>';
+            } else if (tpl === 'card') {
+                html = '<div style="display:flex; gap:15px; font-family:sans-serif;">';
+                if(shows.includes('pv')) html += \`<div style="background:#f9f7f2; padding:10px 15px; border-radius:8px;"><div style="font-size:11px; color:#a5acaa;">\${txtPv}</div><div style="font-size:16px; color:#788583; font-weight:bold;">\${resData.pv}</div></div>\`;
+                if(shows.includes('uv')) html += \`<div style="background:#f9f7f2; padding:10px 15px; border-radius:8px;"><div style="font-size:11px; color:#a5acaa;">\${txtUv}</div><div style="font-size:16px; color:#788583; font-weight:bold;">\${resData.uv}</div></div>\`;
+                if(shows.includes('dpv')) html += \`<div style="background:#f9f7f2; padding:10px 15px; border-radius:8px;"><div style="font-size:11px; color:#a5acaa;">\${txtDpv}</div><div style="font-size:16px; color:#788583; font-weight:bold;">\${resData.dpv}</div></div>\`;
+                if(shows.includes('duv')) html += \`<div style="background:#f9f7f2; padding:10px 15px; border-radius:8px;"><div style="font-size:11px; color:#a5acaa;">\${txtDuv}</div><div style="font-size:16px; color:#788583; font-weight:bold;">\${resData.duv}</div></div>\`;
+                html += '</div>';
+            }
+            container.innerHTML = html;
+        })();`;
+        return new Response(trackerJs, { headers: { "Content-Type": "application/javascript", ...corsHeaders } });
+    }
+
+    const siteId = url.searchParams.get('site') || 'default';
     const dateStr = new Date().toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }).split(' ')[0];
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+
+    const k_pv = `site_${siteId}_pv`;
+    const k_uv = `site_${siteId}_uv`;
+    const k_dpv = `site_${siteId}_dpv_${dateStr}`;
+    const k_duv = `site_${siteId}_duv_${dateStr}`;
+    const k_ipe = `site_${siteId}_ipe_${ip}`;
+    const k_ipt = `site_${siteId}_ipt_${dateStr}_${ip}`;
     
-    const k_total_pv = "pv_total";
-    const k_total_uv = "uv_total";
-    const k_today_pv = `pv_${dateStr}`;
-    const k_today_uv = `uv_${dateStr}`;
-    const k_ip_ever = `ip_ever_${ip}`;
-    const k_ip_today = `ip_today_${dateStr}_${ip}`;
-    const k_last_geo = "last_geo";
+    if (action === 'track' && request.method === 'POST') {
+        let payload = {};
+        try { payload = await request.json(); } catch(e) {}
+        
+        const country = request.cf?.country || 'UN';
+        const k_geo = `site_${siteId}_geo_${country}`;
 
-    const [v_tpv, v_tuv, v_dpv, v_duv, v_ipe, v_ipt] = await Promise.all([
-        env.RE_STAT.get(k_total_pv),
-        env.RE_STAT.get(k_total_uv),
-        env.RE_STAT.get(k_today_pv),
-        env.RE_STAT.get(k_today_uv),
-        env.RE_STAT.get(k_ip_ever),
-        env.RE_STAT.get(k_ip_today)
-    ]);
+        const [v_pv, v_uv, v_dpv, v_duv, v_ipe, v_ipt, v_geo] = await Promise.all([
+            env.RE_STAT.get(k_pv), env.RE_STAT.get(k_uv),
+            env.RE_STAT.get(k_dpv), env.RE_STAT.get(k_duv),
+            env.RE_STAT.get(k_ipe), env.RE_STAT.get(k_ipt),
+            env.RE_STAT.get(k_geo)
+        ]);
 
-    let total_pv = parseInt(v_tpv || "0");
-    let total_uv = parseInt(v_tuv || "0");
-    let today_pv = parseInt(v_dpv || "0");
-    let today_uv = parseInt(v_duv || "0");
+        let pv = parseInt(v_pv || "0") + 1;
+        let dpv = parseInt(v_dpv || "0") + 1;
+        let geoCount = parseInt(v_geo || "0") + 1;
+        let uv = parseInt(v_uv || "0");
+        let duv = parseInt(v_duv || "0");
 
-    const writeTasks = [];
-
-    if (!isJsRequest) {
-        total_pv++;
-        today_pv++;
-        writeTasks.push(env.RE_STAT.put(k_total_pv, total_pv.toString()));
-        writeTasks.push(env.RE_STAT.put(k_today_pv, today_pv.toString(), { expirationTtl: 172800 }));
-        writeTasks.push(env.RE_STAT.put(k_last_geo, geoText));
+        const tasks = [
+            env.RE_STAT.put(k_pv, pv.toString()),
+            env.RE_STAT.put(k_dpv, dpv.toString(), { expirationTtl: 86400 * 30 }),
+            env.RE_STAT.put(k_geo, geoCount.toString())
+        ];
 
         if (!v_ipe) {
-            total_uv++;
-            writeTasks.push(env.RE_STAT.put(k_total_uv, total_uv.toString()));
-            writeTasks.push(env.RE_STAT.put(k_ip_ever, "1"));
+            uv++;
+            tasks.push(env.RE_STAT.put(k_uv, uv.toString()));
+            tasks.push(env.RE_STAT.put(k_ipe, "1"));
         }
         if (!v_ipt) {
-            today_uv++;
-            writeTasks.push(env.RE_STAT.put(k_today_uv, today_uv.toString(), { expirationTtl: 172800 }));
-            writeTasks.push(env.RE_STAT.put(k_ip_today, "1", { expirationTtl: 172800 }));
+            duv++;
+            tasks.push(env.RE_STAT.put(k_duv, duv.toString(), { expirationTtl: 86400 * 2 }));
+            tasks.push(env.RE_STAT.put(k_ipt, "1", { expirationTtl: 86400 * 2 }));
         }
 
-        waitUntil(Promise.all(writeTasks));
+        waitUntil(Promise.all(tasks));
+
+        return new Response(JSON.stringify({ pv, uv, dpv, duv }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    if (isJsRequest) {
-        const jsCode = `
-        (async function() {
-            const res = await fetch('${url.origin}/stats');
-            const data = await res.json();
-            const container = document.getElementById('stat-card');
-            if(!container) return;
-            container.innerHTML = \`
-                <div style="background:#f9f7f2; border:1px solid #ece9e0; border-radius:12px; padding:16px 24px; font-family:-apple-system,sans-serif; color:#788583; display:inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px dashed #edeae3; padding-bottom:12px;">
-                        <div style="text-align:center; padding:0 15px;">
-                            <div style="font-size:11px; color:#a5acaa; margin-bottom:4px; letter-spacing:1px;">流年阅历 (PV)</div>
-                            <div style="font-size:18px; font-weight:600;">\${data.total_pv}</div>
-                        </div>
-                        <div style="width:1px; background:#edeae3;"></div>
-                        <div style="text-align:center; padding:0 15px;">
-                            <div style="font-size:11px; color:#a5acaa; margin-bottom:4px; letter-spacing:1px;">独立灵魂 (UV)</div>
-                            <div style="font-size:18px; font-weight:600;">\${data.total_uv}</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-size:12px; color:#a0b5a6;">
-                        <div>今日足迹: \${data.today_pv}</div>
-                        <div style="margin-left:20px;">远方来客: \${data.last_geo}</div>
-                    </div>
-                </div>\`;
-        })();`;
-        return new Response(jsCode, { headers: { "Content-Type": "application/javascript" } });
+    if (request.method === 'GET') {
+        const [v_pv, v_uv, v_dpv, v_duv] = await Promise.all([
+            env.RE_STAT.get(k_pv), env.RE_STAT.get(k_uv),
+            env.RE_STAT.get(k_dpv), env.RE_STAT.get(k_duv)
+        ]);
+        return new Response(JSON.stringify({
+            pv: v_pv || 0, uv: v_uv || 0, dpv: v_dpv || 0, duv: v_duv || 0
+        }), { headers: { "Content-Type": "application/json", ...corsHeaders } });
     }
 
-    const resData = { total_pv, total_uv, today_pv, today_uv, last_geo: await env.RE_STAT.get(k_last_geo) || geoText };
-    return new Response(JSON.stringify(resData), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-    });
+    return new Response("Invalid Request", { status: 400 });
 }
