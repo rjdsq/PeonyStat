@@ -24,7 +24,6 @@
         #view-edit.show { transform: translateX(0); }
         .edit-scroll-box { padding-bottom: 180px; }
         
-        /* 修复 1：默认不展示登录页，避免闪烁 */
         #view-login { z-index: 50; background: var(--bg); display: none; justify-content: center; align-items: center; padding: 20px; opacity: 1; pointer-events: auto; flex-direction: column; }
 
         .nav-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.02); }
@@ -45,7 +44,7 @@
         .site-card:active { transform: scale(0.97); }
         .site-domain { font-size: 16px; font-weight: 600; }
 
-        .fab { position: fixed; bottom: calc(85px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5); z-index: 15; cursor: pointer; display: none; }
+        .fab { position: fixed; bottom: calc(105px + env(safe-area-inset-bottom)); right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 28px; box-shadow: 0 6px 20px rgba(141, 164, 147, 0.5); z-index: 15; cursor: pointer; display: none; }
         .fab:active { transform: scale(0.9); }
 
         .form-group { margin-bottom: 18px; }
@@ -102,11 +101,12 @@
         <div class="fab" id="fab-add" onclick="showAddSiteModal()">+</div>
 
         <div id="tab-stat" class="view" style="padding-bottom:120px;">
-            <div class="card" style="padding:15px; background:var(--primary); color:white; border:none; cursor:pointer;" onclick="openStatSelector()">
-                <div style="font-size:16px; font-weight:600; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-                    <span id="stat-view-title">全站数据汇总</span>
-                    <span style="font-size:12px; font-weight:normal; opacity:0.8;">点击切换 ▼</span>
-                </div>
+            <div class="form-group">
+                <select id="stat-selector" class="native-select" style="font-weight:600;" onchange="selectStat(this.value)">
+                </select>
+            </div>
+            <div class="card" id="stat-board" style="padding:15px; background:var(--primary); color:white; border:none;">
+                <div style="font-size:16px; font-weight:600; margin-bottom:15px;" id="stat-view-title">全站数据汇总</div>
                 <div class="stat-grid">
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访问</div><div class="stat-val" style="color:white;" id="all-pv">-</div></div>
                     <div class="stat-box" style="background:rgba(255,255,255,0.15); border:none;"><div class="stat-label" style="color:rgba(255,255,255,0.8);">总访客</div><div class="stat-val" style="color:white;" id="all-uv">-</div></div>
@@ -145,21 +145,21 @@
                 
                 <div class="label">选择显示的模块</div>
                 <div class="toggle-group form-group">
-                    <label class="toggle-item"><input type="checkbox" id="e-t-pv"> 总访问</label>
-                    <label class="toggle-item"><input type="checkbox" id="e-t-uv"> 总访客</label>
-                    <label class="toggle-item"><input type="checkbox" id="e-t-dpv"> 今日访问</label>
-                    <label class="toggle-item"><input type="checkbox" id="e-t-duv"> 今日访客</label>
+                    <label class="toggle-item"><input type="checkbox" id="e-t-pv" onchange="checkChanges()"> 总访问</label>
+                    <label class="toggle-item"><input type="checkbox" id="e-t-uv" onchange="checkChanges()"> 总访客</label>
+                    <label class="toggle-item"><input type="checkbox" id="e-t-dpv" onchange="checkChanges()"> 今日访问</label>
+                    <label class="toggle-item"><input type="checkbox" id="e-t-duv" onchange="checkChanges()"> 今日访客</label>
                 </div>
 
                 <div class="form-group">
                     <div class="label">对齐方式与尺寸大小</div>
                     <div style="display:flex; gap:12px;">
-                        <select id="e-align" class="native-select" style="flex:1;">
+                        <select id="e-align" class="native-select" style="flex:1;" onchange="checkChanges()">
                             <option value="left">居左对齐</option>
                             <option value="center">居中对齐</option>
                             <option value="right">居右对齐</option>
                         </select>
-                        <select id="e-size" class="native-select" style="flex:1;">
+                        <select id="e-size" class="native-select" style="flex:1;" onchange="checkChanges()">
                             <option value="1">小号尺寸</option>
                             <option value="2">中号尺寸</option>
                             <option value="3">大号尺寸</option>
@@ -169,28 +169,37 @@
 
                 <div class="form-group">
                     <div class="label">选择展现效果</div>
-                    <select id="e-tpl-select" class="native-select">
+                    <select id="e-tpl-select" class="native-select" onchange="checkChanges()">
                         <option value="1">燕麦暖色</option>
                         <option value="3">灰绿冷调</option>
                         <option value="4">藕荷粉黛</option>
                         <option value="5">雾霾灰蓝</option>
-                        <option value="6">极夜深黑</option>
                         <option value="10">隐形无框</option>
+                        <option value="11">赛博朋克</option>
+                        <option value="12">极客终端</option>
+                        <option value="13">咖啡醇香</option>
+                        <option value="14">深海幽蓝</option>
+                        <option value="15">落日余晖</option>
+                        <option value="16">森林秘境</option>
+                        <option value="17">樱花粉柔</option>
+                        <option value="18">薰衣草紫</option>
+                        <option value="19">珊瑚橘暖</option>
+                        <option value="20">极简留白</option>
                     </select>
                 </div>
 
                 <div class="label" style="margin-top: 24px;">自定义页面文字</div>
                 <div style="display:flex; gap:12px;">
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-pv" placeholder="总访问"></div>
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-uv" placeholder="总访客"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-pv" placeholder="总访问" oninput="checkChanges()"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-uv" placeholder="总访客" oninput="checkChanges()"></div>
                 </div>
                 <div style="display:flex; gap:12px;">
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-dpv" placeholder="今日访问"></div>
-                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-duv" placeholder="今日访客"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-dpv" placeholder="今日访问" oninput="checkChanges()"></div>
+                    <div class="form-group" style="flex:1;"><input type="text" id="e-v-duv" placeholder="今日访客" oninput="checkChanges()"></div>
                 </div>
 
                 <div style="margin-top: 30px;">
-                    <button class="btn btn-primary" onclick="saveEdit()">保存设置</button>
+                    <button class="btn btn-primary" id="btn-save-edit" onclick="saveEdit()">保存设置</button>
                     <div class="action-row">
                         <button class="btn btn-outline" onclick="genLinkFromEdit()">获取代码</button>
                         <button class="btn btn-danger" onclick="confirmDeleteFromEdit()">删除网站</button>
@@ -218,16 +227,14 @@
 
     <script>
         let configs = {};
-        let allStatsData = null; // 用于缓存统计数据
+        let allStatsData = null; 
         let isEditOpen = false;
-        let isModalOpen = false;
         let sysHasPwd = false;
 
         const tabTitles = { site: '网站管理', stat: '统计概览', sys: '系统设置' };
 
         window.addEventListener('popstate', (e) => {
-            if (isModalOpen) closeModal(true);
-            else if (isEditOpen) closeEdit(true);
+            if (isEditOpen) closeEdit(true);
         });
 
         function showToast(msg, ms=1500) {
@@ -245,18 +252,12 @@
             const md = document.getElementById('modal');
             ov.style.display = 'flex';
             setTimeout(() => md.classList.add('show'), 10);
-            
-            isModalOpen = true;
-            history.pushState({view: 'modal'}, '');
         }
 
-        function closeModal(fromPop = false) {
+        function closeModal() {
             const md = document.getElementById('modal');
             md.classList.remove('show');
             setTimeout(() => { document.getElementById('overlay').style.display = 'none'; }, 200);
-            
-            isModalOpen = false;
-            if(!fromPop) history.back();
         }
 
         function switchTab(tab) {
@@ -296,7 +297,6 @@
                     const lData = await lRes.json();
                     if (lData.ok) { return initApp(); }
                 }
-                // 修复 1：只有需要时才显示登录页
                 document.getElementById('view-login').style.display = 'flex';
             } else {
                 initApp();
@@ -326,7 +326,6 @@
         }
 
         async function saveSysConfig() {
-            // 修复 2：去除首尾多余空格，并严谨判断置空逻辑
             const pwd = document.getElementById('sys-pwd').value.trim();
             document.getElementById('sys-pwd').value = pwd; 
             const rem = document.getElementById('sys-rem-checkbox').checked;
@@ -348,7 +347,6 @@
         }
 
         function confirmClearAll() {
-            // 修复 5：精简提示内容
             openModal('警告：清空所有数据', 
             `确定清空所有网站和密码吗？不可恢复！`, 
             `<button class="btn btn-outline" onclick="closeModal()">取消</button>
@@ -365,6 +363,8 @@
         }
 
         async function initApp() {
+            document.getElementById('sys-pwd').value = localStorage.getItem('sys_pwd') || '';
+            
             document.getElementById('view-login').style.display = 'none';
             document.getElementById('header-bar').style.display = 'flex';
             document.getElementById('main-container').style.display = 'block';
@@ -384,7 +384,6 @@
             const list = document.getElementById('site-list');
             list.innerHTML = '';
             for (let site in configs) {
-                // 修复 6：去除了多余文字
                 list.innerHTML += `
                 <div class="site-card" onclick="openEdit('${site}')">
                     <div class="site-domain" style="margin-bottom:0;">${site}</div>
@@ -400,6 +399,13 @@
             document.getElementById('stat-detail-list').innerHTML = '<div style="text-align:center; color:var(--text-l);">数据加载中...</div>';
             const res = await fetch('/stats?action=get_all_stats');
             allStatsData = await res.json();
+            
+            let optionsHtml = '<option value="all">👑 全站数据汇总</option>';
+            for (let site in allStatsData.sites) {
+                optionsHtml += `<option value="${site}">查看网站: ${site}</option>`;
+            }
+            document.getElementById('stat-selector').innerHTML = optionsHtml;
+            document.getElementById('stat-selector').value = 'all';
             
             renderStatBoard('all');
             
@@ -421,6 +427,10 @@
             document.getElementById('stat-detail-list').innerHTML = html;
         }
 
+        function selectStat(target) {
+            renderStatBoard(target);
+        }
+
         function renderStatBoard(target) {
             if (!allStatsData) return;
             if (target === 'all') {
@@ -437,27 +447,6 @@
                 document.getElementById('all-dpv').innerText = s.dpv;
                 document.getElementById('all-duv').innerText = s.duv;
             }
-        }
-
-        // 修复 3：弹出选择器菜单
-        function openStatSelector() {
-            if(!allStatsData || Object.keys(allStatsData.sites).length === 0) {
-                return showToast('暂无网站可切换');
-            }
-            let html = `<div style="max-height:250px; overflow-y:auto; margin-bottom:10px; border:1px solid var(--border); border-radius:12px; padding:5px; text-align:left;">`;
-            html += `<div style="padding:14px; border-bottom:1px solid var(--border); cursor:pointer; font-weight:600; color:var(--primary);" onclick="selectStat('all')">👑 全站汇总</div>`;
-            const sites = Object.keys(allStatsData.sites);
-            for(let i=0; i<sites.length; i++){
-                let border = (i === sites.length - 1) ? '' : 'border-bottom:1px solid var(--bg);';
-                html += `<div style="padding:14px; ${border} cursor:pointer; font-size:15px;" onclick="selectStat('${sites[i]}')">${sites[i]}</div>`;
-            }
-            html += `</div>`;
-            openModal('选择查看目标', html, `<button class="btn btn-outline" onclick="closeModal()">取消</button>`);
-        }
-
-        function selectStat(target) {
-            closeModal();
-            renderStatBoard(target);
         }
 
         function showAddSiteModal() {
@@ -505,6 +494,8 @@
             document.getElementById('e-v-dpv').value = c.dpv;
             document.getElementById('e-v-duv').value = c.duv;
 
+            checkChanges();
+
             document.getElementById('sys-title').innerText = `设置: ${site}`;
             document.getElementById('btn-back').style.display = 'flex';
             document.getElementById('fab-add').style.display = 'none';
@@ -512,6 +503,37 @@
             
             isEditOpen = true;
             history.pushState({view: 'edit'}, '');
+        }
+
+        function checkChanges() {
+            const site = document.getElementById('e-site-id').value;
+            const c = configs[site];
+            if (!c) return;
+            
+            const isChanged = (
+                document.getElementById('e-tpl-select').value != (c.tpl || 1) ||
+                document.getElementById('e-size').value != (c.size || 1) ||
+                document.getElementById('e-align').value !== (c.align || 'center') ||
+                document.getElementById('e-v-pv').value !== c.pv ||
+                document.getElementById('e-v-uv').value !== c.uv ||
+                document.getElementById('e-v-dpv').value !== c.dpv ||
+                document.getElementById('e-v-duv').value !== c.duv ||
+                document.getElementById('e-t-pv').checked !== c.shows.pv ||
+                document.getElementById('e-t-uv').checked !== c.shows.uv ||
+                document.getElementById('e-t-dpv').checked !== c.shows.dpv ||
+                document.getElementById('e-t-duv').checked !== c.shows.duv
+            );
+            
+            const btn = document.getElementById('btn-save-edit');
+            if (isChanged) {
+                btn.style.opacity = '1';
+                btn.style.pointerEvents = 'auto';
+                btn.innerText = '保存设置';
+            } else {
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+                btn.innerText = '无变化项可保存';
+            }
         }
 
         function handleBackBtn() {
@@ -553,8 +575,8 @@
                 method: 'POST', body: JSON.stringify({site: site, ...configs[site]})
             });
             
+            checkChanges();
             showToast('保存成功');
-            closeEdit();
         }
 
         function confirmDeleteFromEdit() {
@@ -592,7 +614,7 @@
         function copyCode(site) {
             const code = `<div id="cf-stat"></div>\n<script async src="${window.location.origin}/stats?action=script&site=${site}"><\/script>`;
             navigator.clipboard.writeText(code);
-            closeModal(); // 修复 4：只调用 closeModal，移除 closeEdit，确保不退回首页
+            closeModal();
             showToast('复制成功！');
         }
 
