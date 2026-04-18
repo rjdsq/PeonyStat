@@ -3,56 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>回忆录数据中心 | 专业版</title>
+    <title>企业级站点罗盘</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: -apple-system, "PingFang SC", sans-serif; background-color: #f4f1eb; color: #5c5c5c; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%; max-width: 580px; }
-        h2 { color: #788583; font-weight: 500; text-align: center; margin-bottom: 30px; letter-spacing: 1px; }
-        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
-        .card { background: #f9f7f2; border: 1px solid #ece9e0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .card.geo { grid-column: span 2; flex-direction: row; justify-content: space-between; background: #f3f6f4; border-color: #e2e8e4; }
-        .label { font-size: 12px; color: #a5acaa; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .value { font-size: 24px; color: #788583; font-weight: 600; }
-        .code-box { background: #fafafa; border: 1px dashed #d0b8b4; border-radius: 8px; padding: 15px; position: relative; margin-bottom: 20px; }
-        code { font-family: monospace; font-size: 13px; color: #8da493; word-break: break-all; }
-        .copy-btn { width: 100%; padding: 14px; background: #a0b5a6; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 15px; font-weight: 500; }
-        .copy-btn:hover { background: #8da493; transform: translateY(-1px); }
+        body { font-family: -apple-system, sans-serif; background-color: #f4f1eb; color: #5c5c5c; margin: 0; padding: 40px; display: flex; gap: 30px; justify-content: center; }
+        .panel { background: #ffffff; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); flex: 1; max-width: 600px; }
+        h2 { color: #788583; margin-top: 0; border-bottom: 2px solid #f9f7f2; padding-bottom: 15px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 13px; color: #a5acaa; margin-bottom: 8px; font-weight: bold; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ece9e0; border-radius: 8px; box-sizing: border-box; background: #fafafa; color: #5c5c5c; }
+        .checkbox-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .checkbox-item { display: flex; align-items: center; gap: 5px; font-size: 14px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .code-box { background: #2d2d2d; color: #a0b5a6; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; margin-top: 20px; }
+        button { background: #a0b5a6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #8da493; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 30px; }
+        .stat-card { background: #f9f7f2; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: bold; color: #788583; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>全息统计终端</h2>
-        <div class="grid">
-            <div class="card"><div class="label">流年阅历 (Total PV)</div><div class="value" id="t-pv">-</div></div>
-            <div class="card"><div class="label">独立灵魂 (Total UV)</div><div class="value" id="t-uv">-</div></div>
-            <div class="card"><div class="label">今日足迹 (Today PV)</div><div class="value" id="d-pv">-</div></div>
-            <div class="card"><div class="label">今日新客 (Today UV)</div><div class="value" id="d-uv">-</div></div>
-            <div class="card geo">
-                <div class="label" style="margin-bottom:0;">最新远方来客</div>
-                <div class="value" id="l-geo" style="font-size:16px; color:#a0b5a6;">-</div>
+
+    <div class="panel">
+        <h2>📊 数据大盘</h2>
+        <div class="form-group" style="display:flex; gap:10px;">
+            <input type="text" id="view-site" placeholder="输入要查看的站点 ID" value="mysite1">
+            <button onclick="loadDash()">刷新大盘</button>
+        </div>
+        <div class="stat-grid">
+            <div class="stat-card"><div>总 PV</div><div class="stat-val" id="d-pv">0</div></div>
+            <div class="stat-card"><div>总 UV</div><div class="stat-val" id="d-uv">0</div></div>
+            <div class="stat-card"><div>今日 PV</div><div class="stat-val" id="d-dpv">0</div></div>
+            <div class="stat-card"><div>今日 UV</div><div class="stat-val" id="d-duv">0</div></div>
+        </div>
+        <canvas id="myChart" width="400" height="250"></canvas>
+    </div>
+
+    <div class="panel">
+        <h2>⚙️ 探针生成器</h2>
+        <div class="form-group">
+            <label>站点 ID (用于隔离不同网站数据)</label>
+            <input type="text" id="c-site" value="mysite1" oninput="gen()">
+        </div>
+        <div class="form-group">
+            <label>UI 模板选择</label>
+            <select id="c-tpl" onchange="gen()">
+                <option value="text">极简文字流</option>
+                <option value="card">莫兰迪卡片阵列</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>启用模块</label>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><input type="checkbox" id="m-pv" checked onchange="gen()"> 总访问</div>
+                <div class="checkbox-item"><input type="checkbox" id="m-uv" checked onchange="gen()"> 总访客</div>
+                <div class="checkbox-item"><input type="checkbox" id="m-dpv" checked onchange="gen()"> 今日访问</div>
+                <div class="checkbox-item"><input type="checkbox" id="m-duv" checked onchange="gen()"> 今日访客</div>
             </div>
         </div>
-        <div class="code-box">
-            <code id="code-snippet">加载中...</code>
+        <div class="form-group grid-2">
+            <div><label>自定义文字 (PV)</label><input type="text" id="t-pv" value="流年阅历" oninput="gen()"></div>
+            <div><label>自定义文字 (UV)</label><input type="text" id="t-uv" value="独立灵魂" oninput="gen()"></div>
+            <div><label>自定义文字 (今日PV)</label><input type="text" id="t-dpv" value="今日足迹" oninput="gen()"></div>
+            <div><label>自定义文字 (今日UV)</label><input type="text" id="t-duv" value="今日新客" oninput="gen()"></div>
         </div>
-        <button class="copy-btn" onclick="copyCode()">复制专业版引用链接</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('code-out').innerText)">复制集成代码</button>
+        <div class="code-box" id="code-out"></div>
     </div>
+
     <script>
-        const apiUrl = window.location.origin;
-        const snippet = `<div id="stat-card"></div>\n<script src="${apiUrl}/stats?js"><\/script>`;
-        document.getElementById('code-snippet').innerText = snippet;
+        let chartInst = null;
 
-        fetch('/stats').then(r => r.json()).then(data => {
-            document.getElementById('t-pv').innerText = data.total_pv;
-            document.getElementById('t-uv').innerText = data.total_uv;
-            document.getElementById('d-pv').innerText = data.today_pv;
-            document.getElementById('d-uv').innerText = data.today_uv;
-            document.getElementById('l-geo').innerText = data.last_geo;
-        });
+        function gen() {
+            const site = document.getElementById('c-site').value || 'default';
+            const tpl = document.getElementById('c-tpl').value;
+            const shows = [];
+            if(document.getElementById('m-pv').checked) shows.push('pv');
+            if(document.getElementById('m-uv').checked) shows.push('uv');
+            if(document.getElementById('m-dpv').checked) shows.push('dpv');
+            if(document.getElementById('m-duv').checked) shows.push('duv');
+            
+            const tPv = document.getElementById('t-pv').value;
+            const tUv = document.getElementById('t-uv').value;
+            const tDpv = document.getElementById('t-dpv').value;
+            const tDuv = document.getElementById('t-duv').value;
 
-        function copyCode() {
-            navigator.clipboard.writeText(snippet);
+            const code = `<div id="cf-stat" 
+    data-site="${site}" 
+    data-tpl="${tpl}" 
+    data-show="${shows.join(',')}" 
+    data-txt-pv="${tPv}" 
+    data-txt-uv="${tUv}" 
+    data-txt-dpv="${tDpv}" 
+    data-txt-duv="${tDuv}">
+</div>
+<script async src="${window.location.origin}/stats?action=script"><\/script>`;
+            
+            document.getElementById('code-out').innerText = code;
         }
+
+        async function loadDash() {
+            const site = document.getElementById('view-site').value;
+            const res = await fetch(`/stats?site=${site}`);
+            const data = await res.json();
+            
+            document.getElementById('d-pv').innerText = data.pv;
+            document.getElementById('d-uv').innerText = data.uv;
+            document.getElementById('d-dpv').innerText = data.dpv;
+            document.getElementById('d-duv').innerText = data.duv;
+
+            if(chartInst) chartInst.destroy();
+            const ctx = document.getElementById('myChart').getContext('2d');
+            chartInst = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['总 PV', '总 UV', '今日 PV', '今日 UV'],
+                    datasets: [{
+                        label: '基础访问量',
+                        data: [data.pv, data.uv, data.dpv, data.duv],
+                        backgroundColor: ['#a0b5a6', '#d0b8b4', '#8da493', '#bca39f'],
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { display: false } } }
+            });
+        }
+
+        gen();
+        loadDash();
     </script>
 </body>
 </html>
